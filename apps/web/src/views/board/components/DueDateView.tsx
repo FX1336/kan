@@ -15,7 +15,9 @@ import {
   addDays,
   endOfDay,
   endOfWeek,
+  isSameDay,
   startOfDay,
+  startOfWeek,
 } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -54,6 +56,8 @@ export const getDueDateBucketUpdate = (
   weekStartsOn: 0 | 1 | 6,
 ): { dueDate?: Date | null; isActive: boolean } => {
   const today = startOfDay(new Date());
+  const weekStart = startOfDay(startOfWeek(today, { weekStartsOn }));
+  const weekEnd = startOfDay(endOfWeek(today, { weekStartsOn }));
 
   switch (bucket) {
     case "active":
@@ -61,20 +65,16 @@ export const getDueDateBucketUpdate = (
     case "none":
       return { dueDate: null, isActive: false };
     case "overdue":
-      return { dueDate: addDays(today, -1), isActive: false };
+      return { dueDate: addDays(weekStart, -1), isActive: false };
     case "today":
       return { dueDate: today, isActive: false };
     case "week": {
-      const weekEnd = startOfDay(endOfWeek(today, { weekStartsOn }));
-      const target = weekEnd.getTime() <= today.getTime()
-        ? addDays(today, 1)
-        : weekEnd;
+      // Pick a day in the current week other than today.
+      const target = isSameDay(weekStart, today) ? weekEnd : weekStart;
       return { dueDate: target, isActive: false };
     }
-    case "future": {
-      const weekEnd = startOfDay(endOfWeek(today, { weekStartsOn }));
+    case "future":
       return { dueDate: addDays(weekEnd, 1), isActive: false };
-    }
   }
 };
 
@@ -88,11 +88,11 @@ const classifyCard = (
   const now = new Date();
   const today = startOfDay(now);
   const endOfToday = endOfDay(now);
-
-  if (card.dueDate < today) return "overdue";
-  if (card.dueDate <= endOfToday) return "today";
-
+  const weekStart = startOfDay(startOfWeek(now, { weekStartsOn }));
   const weekEnd = endOfDay(endOfWeek(now, { weekStartsOn }));
+
+  if (card.dueDate < weekStart) return "overdue";
+  if (card.dueDate >= today && card.dueDate <= endOfToday) return "today";
   if (card.dueDate <= weekEnd) return "week";
 
   return "future";
