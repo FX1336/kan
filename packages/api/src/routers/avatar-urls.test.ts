@@ -18,6 +18,7 @@ vi.mock("@kan/db/repository/cardComment.repo", () => ({}));
 vi.mock("@kan/db/repository/checklist.repo", () => ({}));
 vi.mock("@kan/db/repository/label.repo", () => ({}));
 vi.mock("@kan/db/repository/project.repo", () => ({}));
+vi.mock("@kan/db/repository/board.repo", () => ({}));
 vi.mock("@kan/db/repository/list.repo", () => ({}));
 vi.mock("@kan/db/repository/subscription.repo", () => ({}));
 vi.mock("@kan/db/repository/workspace.repo", () => ({
@@ -168,6 +169,7 @@ describe("avatar URL resolution in routers", () => {
       index: 1,
       dueDate: null,
       isActive: false,
+      isArchived: false,
       createdBy: "user-1",
       labels: [],
       project: null,

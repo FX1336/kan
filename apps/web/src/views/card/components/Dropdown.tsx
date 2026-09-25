@@ -7,6 +7,7 @@ import {
   HiOutlineDocumentDuplicate,
   HiOutlineTrash,
 } from "react-icons/hi2";
+import { IoArchiveOutline } from "react-icons/io5";
 
 import { authClient } from "@kan/auth/client";
 
@@ -15,6 +16,7 @@ import { usePermissions } from "~/hooks/usePermissions";
 import { useModal } from "~/providers/modal";
 import { usePopup } from "~/providers/popup";
 import { api } from "~/utils/api";
+import { invalidateCard } from "~/utils/cardInvalidation";
 
 export default function CardDropdown({
   cardPublicId,
@@ -24,6 +26,7 @@ export default function CardDropdown({
   ticketNumber,
   listPublicId,
   cardIndex,
+  isArchived,
 }: {
   cardPublicId: string;
   isTemplate?: boolean;
@@ -32,6 +35,7 @@ export default function CardDropdown({
   ticketNumber?: string | null;
   listPublicId?: string;
   cardIndex?: number;
+  isArchived?: boolean;
 }) {
   const { openModal } = useModal();
   const { showPopup } = usePopup();
@@ -56,6 +60,29 @@ export default function CardDropdown({
       });
     },
     onSettled: async () => {
+      await utils.board.byId.invalidate();
+    },
+  });
+
+  const toggleArchivedCard = api.card.update.useMutation({
+    onSuccess: (_data, variables) => {
+      showPopup({
+        header: variables.isArchived ? t`Card archived` : t`Card restored`,
+        icon: "success",
+        message: variables.isArchived
+          ? t`The card has been archived.`
+          : t`The card has been restored to its list.`,
+      });
+    },
+    onError: () => {
+      showPopup({
+        header: t`Unable to update card`,
+        icon: "error",
+        message: t`Please try again.`,
+      });
+    },
+    onSettled: async () => {
+      await invalidateCard(utils, cardPublicId);
       await utils.board.byId.invalidate();
     },
   });
@@ -144,6 +171,18 @@ export default function CardDropdown({
               <HiOutlineDocumentDuplicate className="h-[16px] w-[16px] text-dark-900" />
             ),
             disabled: duplicateCard.isPending || !listPublicId,
+          },
+          {
+            label: isArchived ? t`Restore card` : t`Archive card`,
+            action: () =>
+              toggleArchivedCard.mutate({
+                cardPublicId,
+                isArchived: !isArchived,
+              }),
+            icon: (
+              <IoArchiveOutline className="h-[16px] w-[16px] text-dark-900" />
+            ),
+            disabled: toggleArchivedCard.isPending,
           },
         ]
       : []),

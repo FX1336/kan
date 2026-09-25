@@ -206,6 +206,7 @@ export const update = async (
     description?: string | null;
     dueDate?: Date | null;
     isActive?: boolean;
+    isArchived?: boolean;
   },
   args: {
     cardPublicId: string;
@@ -218,6 +219,7 @@ export const update = async (
       description: cardInput.description,
       dueDate: cardInput.dueDate !== undefined ? cardInput.dueDate : undefined,
       isActive: cardInput.isActive,
+      isArchived: cardInput.isArchived,
       updatedAt: new Date(),
     })
     .where(and(eq(cards.publicId, args.cardPublicId), isNull(cards.deletedAt)))
@@ -228,6 +230,7 @@ export const update = async (
       description: cards.description,
       dueDate: cards.dueDate,
       isActive: cards.isActive,
+      isArchived: cards.isArchived,
     });
 
   return result;
@@ -263,6 +266,7 @@ export const getByPublicId = (db: dbClient, cardPublicId: string) => {
       description: true,
       listId: true,
       dueDate: true,
+      isArchived: true,
     },
     with: {
       list: {
@@ -496,6 +500,7 @@ export const getWithListAndMembersByPublicId = async (
       cardNumber: true,
       index: true,
       isActive: true,
+      isArchived: true,
     },
     with: {
       labels: {
@@ -729,6 +734,29 @@ export const getWithListAndMembersByPublicId = async (
   return formattedResult;
 };
 
+export const getArchivedByBoardId = async (db: dbClient, boardId: number) => {
+  return db
+    .select({
+      publicId: cards.publicId,
+      title: cards.title,
+      cardNumber: cards.cardNumber,
+      dueDate: cards.dueDate,
+      updatedAt: cards.updatedAt,
+      listPublicId: lists.publicId,
+      listName: lists.name,
+    })
+    .from(cards)
+    .innerJoin(lists, eq(cards.listId, lists.id))
+    .where(
+      and(
+        eq(lists.boardId, boardId),
+        eq(cards.isArchived, true),
+        isNull(cards.deletedAt),
+      ),
+    )
+    .orderBy(desc(cards.updatedAt));
+};
+
 export const reorder = async (
   db: dbClient,
   args: {
@@ -906,6 +934,7 @@ export const reorder = async (
         description: true,
         dueDate: true,
         isActive: true,
+        isArchived: true,
       },
       where: eq(cards.id, card.id),
     });
