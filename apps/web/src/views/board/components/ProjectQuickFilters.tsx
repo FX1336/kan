@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import Badge from "~/components/Badge";
 import LabelIcon from "~/components/LabelIcon";
+import { formatToArray } from "~/utils/helpers";
 
 interface Project {
   publicId: string;
@@ -12,7 +13,7 @@ interface Project {
 const ProjectQuickFilters = ({ projects }: { projects: Project[] }) => {
   const router = useRouter();
 
-  const activeProjectId = router.query.projects?.[0];
+  const activeProjectId = formatToArray(router.query.projects)[0];
 
   const handleToggle = async (projectPublicId: string) => {
     const isActive = activeProjectId === projectPublicId;
