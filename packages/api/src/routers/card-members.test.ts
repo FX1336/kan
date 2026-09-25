@@ -28,6 +28,9 @@ vi.mock("@kan/db/repository/checklist.repo", () => ({}));
 vi.mock("@kan/db/repository/label.repo", () => ({
   getAllByPublicIds: vi.fn(),
 }));
+vi.mock("@kan/db/repository/project.repo", () => ({
+  getByPublicId: vi.fn(),
+}));
 vi.mock("@kan/db/repository/list.repo", () => ({
   getWorkspaceAndListIdByListPublicId: vi.fn(),
 }));
@@ -213,6 +216,7 @@ describe("card member workspace scoping", () => {
       cardPublicId: "card-12345678",
       listPublicId: "list-12345678",
       copyLabels: false,
+      copyProject: false,
       copyMembers: true,
       copyChecklists: false,
     };

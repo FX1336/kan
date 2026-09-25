@@ -3,6 +3,7 @@ import { t } from "@lingui/core/macro";
 import {
   HiMiniXMark,
   HiOutlineClock,
+  HiOutlineFolder,
   HiOutlineSquare3Stack3D,
   HiOutlineTag,
   HiOutlineUserCircle,
@@ -34,6 +35,12 @@ interface Label {
   colourCode: string | null;
 }
 
+interface Project {
+  publicId: string;
+  name: string;
+  colourCode: string | null;
+}
+
 interface List {
   publicId: string;
   name: string;
@@ -42,12 +49,14 @@ interface List {
 const Filters = ({
   position = "right",
   labels,
+  projects,
   members,
   lists,
   isLoading,
 }: {
   position?: "left" | "right";
   labels: Label[];
+  projects: Project[];
   members: Member[];
   lists: List[];
   isLoading: boolean;
@@ -62,6 +71,7 @@ const Filters = ({
           ...router.query,
           members: [],
           labels: [],
+          projects: [],
           lists: [],
           dueDate: [],
         },
@@ -95,6 +105,13 @@ const Filters = ({
     value: label.name,
     selected: !!router.query.labels?.includes(label.publicId),
     leftIcon: <LabelIcon colourCode={label.colourCode} />,
+  }));
+
+  const formattedProjects = projects.map((project) => ({
+    key: project.publicId,
+    value: project.name,
+    selected: !!router.query.projects?.includes(project.publicId),
+    leftIcon: <LabelIcon colourCode={project.colourCode} />,
   }));
 
   const formattedLists = lists.map((list) => ({
@@ -139,6 +156,7 @@ const Filters = ({
   const filterCounts = {
     members: formatToArray(router.query.members).length,
     labels: formatToArray(router.query.labels).length,
+    projects: formatToArray(router.query.projects).length,
     lists: formatToArray(router.query.lists).length,
     dueDate: formatToArray(router.query.dueDate).length,
   };
@@ -162,6 +180,17 @@ const Filters = ({
       items: formattedLabels,
       selectedCount: filterCounts.labels,
     },
+    ...(formattedProjects.length
+      ? [
+          {
+            key: "projects",
+            label: t`Projects`,
+            icon: <HiOutlineFolder size={16} />,
+            items: formattedProjects,
+            selectedCount: filterCounts.projects,
+          },
+        ]
+      : []),
     ...(formattedLists.length
       ? [
           {

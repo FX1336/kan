@@ -59,6 +59,7 @@ export default function PublicBoardView() {
       workspaceSlug: workspaceSlug ?? "",
       members: formatToArray(router.query.members),
       labels: formatToArray(router.query.labels),
+      projects: formatToArray(router.query.projects),
       lists: formatToArray(router.query.lists),
       ...(dueDateFilters.length > 0 && {
         dueDateFilters: dueDateFilters,
@@ -154,6 +155,7 @@ export default function PublicBoardView() {
                 </div>
                 <Filters
                   labels={data.labels ?? []}
+                  projects={data.projects ?? []}
                   members={[]}
                   lists={data.allLists ?? []}
                   isLoading={isLoading}
@@ -221,6 +223,7 @@ export default function PublicBoardView() {
                             <Card
                               title={card.title}
                               labels={card.labels}
+                              project={card.project}
                               checklists={card.checklists ?? []}
                               members={[]}
                               description={card.description}

@@ -7,6 +7,13 @@ export const labelSchema = z.object({
   colourCode: z.string().nullable(),
 });
 
+// Shared project schema used across board and card responses
+export const projectSchema = z.object({
+  publicId: z.string(),
+  name: z.string(),
+  colourCode: z.string().nullable(),
+});
+
 // Shared checklist item schema
 export const checklistItemResponseSchema = z.object({
   publicId: z.string(),

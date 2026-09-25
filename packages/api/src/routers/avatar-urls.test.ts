@@ -17,6 +17,7 @@ vi.mock("@kan/db/repository/cardActivity.repo", () => ({
 vi.mock("@kan/db/repository/cardComment.repo", () => ({}));
 vi.mock("@kan/db/repository/checklist.repo", () => ({}));
 vi.mock("@kan/db/repository/label.repo", () => ({}));
+vi.mock("@kan/db/repository/project.repo", () => ({}));
 vi.mock("@kan/db/repository/list.repo", () => ({}));
 vi.mock("@kan/db/repository/subscription.repo", () => ({}));
 vi.mock("@kan/db/repository/workspace.repo", () => ({
@@ -97,6 +98,7 @@ const createActivity = (publicId: string, withMember: boolean) => ({
   fromList: null,
   toList: null,
   label: null,
+  project: null,
   member: withMember
     ? {
         publicId: "member-2",
@@ -167,6 +169,7 @@ describe("avatar URL resolution in routers", () => {
       dueDate: null,
       createdBy: "user-1",
       labels: [],
+      project: null,
       attachments: [],
       checklists: [],
       list: {
@@ -176,6 +179,7 @@ describe("avatar URL resolution in routers", () => {
           publicId: "board-1234567",
           name: "Board",
           labels: [],
+          projects: [],
           lists: [],
           workspace: {
             publicId: "workspace-12",

@@ -17,6 +17,7 @@ export {
 
 export {
   labelSchema,
+  projectSchema,
   checklistItemResponseSchema,
   checklistResponseSchema,
   userSchema,

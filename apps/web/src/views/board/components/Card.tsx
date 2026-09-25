@@ -18,6 +18,7 @@ const Card = ({
   title,
   ticketNumber,
   labels,
+  project,
   members,
   checklists,
   description,
@@ -28,6 +29,7 @@ const Card = ({
   title: string;
   ticketNumber?: string | null;
   labels: { name: string; colourCode: string | null }[];
+  project?: { name: string; colourCode: string | null } | null;
   members: {
     publicId: string;
     email: string;
@@ -76,6 +78,7 @@ const Card = ({
       )}
       <span className="break-words">{title}</span>
       {labels.length ||
+      project ||
       members.length ||
       checklists.length > 0 ||
       hasDescription ||
@@ -84,6 +87,12 @@ const Card = ({
       hasAttachments ? (
         <div className="mt-2 flex flex-col justify-end">
           <div className="space-x-0.5">
+            {project && (
+              <Badge
+                value={project.name}
+                iconLeft={<LabelIcon colourCode={project.colourCode} />}
+              />
+            )}
             {labels.map((label) => (
               <Badge
                 value={label.name}

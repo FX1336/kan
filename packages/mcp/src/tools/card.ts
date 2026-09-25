@@ -19,6 +19,10 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
         .array(z.string())
         .optional()
         .describe("Public IDs of labels to attach"),
+      projectPublicId: z
+        .string()
+        .optional()
+        .describe("Public ID of the project to assign"),
       memberPublicIds: z
         .array(z.string())
         .optional()
@@ -34,6 +38,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
       description,
       dueDate,
       labelPublicIds,
+      projectPublicId,
       memberPublicIds,
       position,
     }) => {
@@ -43,6 +48,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
         description,
         dueDate,
         labelPublicIds: labelPublicIds ?? [],
+        projectPublicId: projectPublicId ?? null,
         memberPublicIds: memberPublicIds ?? [],
         position: position ?? "end",
       });
@@ -120,6 +126,11 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
         .optional()
         .default(true)
         .describe("Copy labels to the duplicate"),
+      copyProject: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("Copy the project to the duplicate"),
       copyMembers: z
         .boolean()
         .optional()
@@ -135,6 +146,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
       cardPublicId,
       targetListPublicId,
       copyLabels = true,
+      copyProject = true,
       copyMembers = true,
       copyChecklists = true,
     }) => {
@@ -153,6 +165,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
         {
           listPublicId,
           copyLabels,
+          copyProject,
           copyMembers,
           copyChecklists,
         },

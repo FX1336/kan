@@ -155,8 +155,15 @@ export function CardModal({
                 </button>
               </div>
             </div>
-            {labels.length > 0 && (
+            {(labels.length > 0 || data?.project) && (
               <div className="mt-2">
+                {data?.project && (
+                  <Badge
+                    key={data.project.publicId}
+                    value={data.project.name}
+                    iconLeft={<LabelIcon colourCode={data.project.colourCode} />}
+                  />
+                )}
                 {labels.map((label) => (
                   <Badge
                     key={label.publicId}

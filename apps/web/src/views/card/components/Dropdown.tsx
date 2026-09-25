@@ -135,6 +135,7 @@ export default function CardDropdown({
                 listPublicId,
                 index: cardIndex + 1,
                 copyLabels: true,
+                copyProject: true,
                 copyMembers: true,
                 copyChecklists: true,
               });

@@ -96,6 +96,7 @@ export function CardContextDuplicateModal({
       cardPublicId,
       listPublicId,
       copyLabels,
+      copyProject: copyLabels,
       copyMembers,
       copyChecklists,
       ...(typeof indexNum === "number" && { index: indexNum }),

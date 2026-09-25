@@ -14,6 +14,7 @@ export default function CardPreview({ card, cardPrefix }: CardPreviewProps) {
         card.cardNumber != null ? `${cardPrefix}-${card.cardNumber}` : null
       }
       labels={card.labels}
+      project={card.project}
       members={card.members}
       checklists={card.checklists ?? []}
       description={card.description ?? null}

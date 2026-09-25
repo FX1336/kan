@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   checklistResponseSchema,
   labelSchema,
+  projectSchema,
   workspaceMemberSchema,
 } from "./common";
 
@@ -19,6 +20,7 @@ export const boardListItemSchema = z.object({
     }),
   ),
   labels: z.array(labelSchema),
+  projects: z.array(projectSchema),
 });
 
 // ─── Card sub-object inside board detail (byId) ─────────────
@@ -42,6 +44,7 @@ const boardDetailCardSchema = z.object({
   cardNumber: z.number().nullable(),
   dueDate: z.date().nullable(),
   labels: z.array(labelSchema),
+  project: projectSchema.nullable(),
   members: z.array(boardCardMemberSchema),
   attachments: z.array(z.object({ publicId: z.string() })),
   checklists: z.array(checklistResponseSchema),
@@ -62,6 +65,7 @@ export const boardDetailSchema = z.object({
     members: z.array(workspaceMemberSchema),
   }),
   labels: z.array(labelSchema),
+  projects: z.array(projectSchema),
   lists: z.array(
     z.object({
       publicId: z.string(),
@@ -86,6 +90,7 @@ const boardSlugCardSchema = z.object({
   index: z.number(),
   dueDate: z.date().nullable(),
   labels: z.array(labelSchema),
+  project: projectSchema.nullable(),
   attachments: z.array(z.object({ publicId: z.string() })),
   checklists: z.array(checklistResponseSchema),
   comments: z.array(z.object({ publicId: z.string() })),
@@ -103,6 +108,7 @@ export const boardBySlugSchema = z.object({
     slug: z.string(),
   }),
   labels: z.array(labelSchema),
+  projects: z.array(projectSchema),
   lists: z.array(
     z.object({
       publicId: z.string(),
