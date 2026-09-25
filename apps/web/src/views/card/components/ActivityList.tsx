@@ -17,6 +17,7 @@ import {
   HiOutlineUserMinus,
   HiOutlineUserPlus,
 } from "react-icons/hi2";
+import { IoArchiveOutline } from "react-icons/io5";
 
 import type {
   GetCardActivitiesOutput,
@@ -147,6 +148,8 @@ const getActivityText = ({
     "card.updated.dueDate.added": t`set the due date`,
     "card.updated.dueDate.updated": t`updated the due date`,
     "card.updated.dueDate.removed": t`removed the due date`,
+    "card.updated.archived.added": t`archived the card`,
+    "card.updated.archived.removed": t`restored the card`,
   } as const;
 
   if (!(type in ACTIVITY_TYPE_MAP)) return null;
@@ -372,6 +375,8 @@ const ACTIVITY_ICON_MAP: Partial<Record<ActivityType, React.ReactNode | null>> =
     "card.updated.dueDate.added": <HiOutlineClock />,
     "card.updated.dueDate.updated": <HiOutlineClock />,
     "card.updated.dueDate.removed": <HiOutlineClock />,
+    "card.updated.archived.added": <IoArchiveOutline />,
+    "card.updated.archived.removed": <IoArchiveOutline />,
   } as const;
 
 const getActivityIcon = (

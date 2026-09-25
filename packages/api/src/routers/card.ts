@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import * as boardRepo from "@kan/db/repository/board.repo";
 import * as cardRepo from "@kan/db/repository/card.repo";
 import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as cardCommentRepo from "@kan/db/repository/cardComment.repo";
@@ -16,6 +17,7 @@ import {
 
 import {
   activityItemSchema,
+  archivedCardSchema,
   cardCreateResponseSchema,
   cardDetailSchema,
   cardUpdateResponseSchema,
@@ -1003,6 +1005,7 @@ export const cardRouter = createTRPCRouter({
         listPublicId: z.string().min(12).optional(),
         dueDate: z.date().nullable().optional(),
         isActive: z.boolean().optional(),
+        isArchived: z.boolean().optional(),
       }),
     )
     .output(cardUpdateResponseSchema)
@@ -1077,10 +1080,12 @@ export const cardRouter = createTRPCRouter({
             publicId: string;
             dueDate: Date | null;
             isActive: boolean;
+            isArchived: boolean;
           }
         | undefined;
 
       const previousDueDate = existingCard.dueDate;
+      const previousIsArchived = existingCard.isArchived;
       const normalizedDescription =
         input.description !== undefined
           ? normalizeDescription(input.description)
@@ -1093,7 +1098,8 @@ export const cardRouter = createTRPCRouter({
         input.title ||
         normalizedDescription !== undefined ||
         input.dueDate !== undefined ||
-        input.isActive !== undefined
+        input.isActive !== undefined ||
+        input.isArchived !== undefined
       ) {
         result = await cardRepo.update(
           ctx.db,
@@ -1105,6 +1111,9 @@ export const cardRouter = createTRPCRouter({
             ...(input.dueDate !== undefined && { dueDate: input.dueDate }),
             ...(input.isActive !== undefined && {
               isActive: input.isActive,
+            }),
+            ...(input.isArchived !== undefined && {
+              isArchived: input.isArchived,
             }),
           },
           { cardPublicId: input.cardPublicId },
@@ -1193,6 +1202,19 @@ export const cardRouter = createTRPCRouter({
         });
       }
 
+      if (
+        input.isArchived !== undefined &&
+        input.isArchived !== previousIsArchived
+      ) {
+        activities.push({
+          type: input.isArchived
+            ? ("card.updated.archived.added" as const)
+            : ("card.updated.archived.removed" as const),
+          cardId: result.id,
+          createdBy: userId,
+        });
+      }
+
       if (activities.length > 0) {
         await cardActivityRepo.bulkCreate(ctx.db, activities);
       }
@@ -1263,6 +1285,43 @@ export const cardRouter = createTRPCRouter({
       });
 
       return result;
+    }),
+  getArchived: protectedProcedure
+    .meta({
+      openapi: {
+        summary: "Get archived cards for a board",
+        method: "GET",
+        path: "/boards/{boardPublicId}/archived-cards",
+        description: "Retrieves all archived cards for a given board",
+        tags: ["Cards"],
+        protect: true,
+      },
+    })
+    .input(z.object({ boardPublicId: z.string().min(12) }))
+    .output(z.array(archivedCardSchema))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+
+      if (!userId)
+        throw new TRPCError({
+          message: `User not authenticated`,
+          code: "UNAUTHORIZED",
+        });
+
+      const board = await boardRepo.getWorkspaceAndBoardIdByBoardPublicId(
+        ctx.db,
+        input.boardPublicId,
+      );
+
+      if (!board)
+        throw new TRPCError({
+          message: `Board with public ID ${input.boardPublicId} not found`,
+          code: "NOT_FOUND",
+        });
+
+      await assertPermission(ctx.db, userId, board.workspaceId, "board:view");
+
+      return cardRepo.getArchivedByBoardId(ctx.db, board.id);
     }),
   delete: protectedProcedure
     .meta({

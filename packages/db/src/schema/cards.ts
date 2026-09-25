@@ -52,6 +52,8 @@ export const activityTypes = [
   "card.updated.dueDate.added",
   "card.updated.dueDate.updated",
   "card.updated.dueDate.removed",
+  "card.updated.archived.added",
+  "card.updated.archived.removed",
   "card.archived",
 ] as const;
 
@@ -89,6 +91,7 @@ export const cards = pgTable(
       { onDelete: "set null" },
     ),
     isActive: boolean("isActive").notNull().default(false),
+    isArchived: boolean("isArchived").notNull().default(false),
   },
   (table) => [
     index("card_list_number_idx").on(table.listId, table.cardNumber),

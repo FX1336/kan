@@ -59,6 +59,7 @@ import { useWorkspace } from "~/providers/workspace";
 import { api } from "~/utils/api";
 import { formatToArray, isPlaceholderPublicId } from "~/utils/helpers";
 import { DeleteCardConfirmation } from "~/views/card/components/DeleteCardConfirmation";
+import { ArchivedCardsModal } from "./components/ArchivedCardsModal";
 import BoardDropdown from "./components/BoardDropdown";
 import CalendarView from "./components/CalendarView";
 import type { DueDateBucketKey } from "./components/DueDateView";
@@ -438,6 +439,48 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     },
   });
 
+  const archiveCardMutation = api.card.update.useMutation({
+    onMutate: async (args) => {
+      await utils.board.byId.cancel();
+
+      const currentState = utils.board.byId.getData(queryParams);
+
+      utils.board.byId.setData(queryParams, (oldBoard) => {
+        if (!oldBoard) return oldBoard;
+
+        return {
+          ...oldBoard,
+          lists: oldBoard.lists.map((list) => ({
+            ...list,
+            cards: list.cards.filter(
+              (card) => card.publicId !== args.cardPublicId,
+            ),
+          })),
+        };
+      });
+
+      return { previousState: currentState };
+    },
+    onError: (_error, _args, context) => {
+      utils.board.byId.setData(queryParams, context?.previousState);
+      showPopup({
+        header: t`Unable to archive card`,
+        message: t`Please try again later, or contact customer support.`,
+        icon: "error",
+      });
+    },
+    onSuccess: () => {
+      showPopup({
+        header: t`Card archived`,
+        message: t`The card has been archived.`,
+        icon: "success",
+      });
+    },
+    onSettled: async () => {
+      await utils.board.byId.invalidate(queryParams);
+    },
+  });
+
   useEffect(() => {
     if (isSuccess && boardData) {
       setValue("name", boardData.name || "");
@@ -523,6 +566,10 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     }
     if (action === "delete") {
       openModal("DELETE_CARD", cardPublicId);
+      return;
+    }
+    if (action === "archive") {
+      archiveCardMutation.mutate({ cardPublicId, isArchived: true });
       return;
     }
     const modalType =
@@ -886,6 +933,18 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
           isVisible={isOpen && modalContentType === "MOVE_BOARD"}
         >
           <MoveBoardForm boardPublicId={boardId ?? ""} />
+        </Modal>
+
+        <Modal
+          modalSize="md"
+          isVisible={isOpen && modalContentType === "ARCHIVED_CARDS"}
+        >
+          <ArchivedCardsModal
+            boardPublicId={boardId ?? ""}
+            cardPrefix={boardData?.workspace.cardPrefix ?? ""}
+            isTemplate={!!isTemplate}
+            cardReturnQuery={cardReturnQuery}
+          />
         </Modal>
 
         <Modal

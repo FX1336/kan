@@ -19,6 +19,7 @@ export const cardUpdateResponseSchema = z.object({
   description: z.string().nullable(),
   dueDate: z.date().nullable(),
   isActive: z.boolean(),
+  isArchived: z.boolean(),
 });
 
 // ─── Comment responses ───────────────────────────────────────
@@ -52,6 +53,7 @@ export const cardDetailSchema = z.object({
   index: z.number(),
   dueDate: z.date().nullable(),
   isActive: z.boolean(),
+  isArchived: z.boolean(),
   createdBy: z.string().nullable(),
   labels: z.array(labelSchema),
   project: projectSchema.nullable(),
@@ -233,4 +235,15 @@ export const activityItemSchema = z.object({
       originalFilename: z.string().nullable(),
     })
     .nullable(),
+});
+
+// ─── card.getArchived ────────────────────────────────────────
+export const archivedCardSchema = z.object({
+  publicId: z.string(),
+  title: z.string(),
+  cardNumber: z.number().nullable(),
+  dueDate: z.date().nullable(),
+  updatedAt: z.date().nullable(),
+  listPublicId: z.string(),
+  listName: z.string(),
 });

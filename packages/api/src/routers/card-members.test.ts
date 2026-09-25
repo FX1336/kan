@@ -31,6 +31,9 @@ vi.mock("@kan/db/repository/label.repo", () => ({
 vi.mock("@kan/db/repository/project.repo", () => ({
   getByPublicId: vi.fn(),
 }));
+vi.mock("@kan/db/repository/board.repo", () => ({
+  getWorkspaceAndBoardIdByBoardPublicId: vi.fn(),
+}));
 vi.mock("@kan/db/repository/list.repo", () => ({
   getWorkspaceAndListIdByListPublicId: vi.fn(),
 }));

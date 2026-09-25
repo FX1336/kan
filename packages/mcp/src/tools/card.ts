@@ -72,7 +72,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
 
   server.tool(
     "update_card",
-    "Update a card's title, description, due date, or move it to another list",
+    "Update a card's title, description, due date, move it to another list, or archive/restore it",
     {
       cardPublicId: z.string().describe("The card's public ID"),
       title: z.string().optional().describe("New card title"),
@@ -86,14 +86,41 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
         .string()
         .optional()
         .describe("Move card to this list (public ID)"),
+      isArchived: z
+        .boolean()
+        .optional()
+        .describe("Archive the card (true) or restore it (false)"),
     },
-    async ({ cardPublicId, title, description, dueDate, listPublicId }) => {
+    async ({
+      cardPublicId,
+      title,
+      description,
+      dueDate,
+      listPublicId,
+      isArchived,
+    }) => {
       const data = await client.request("PUT", `/cards/${cardPublicId}`, {
         title,
         description,
         dueDate,
         listPublicId,
+        isArchived,
       });
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    "get_archived_cards",
+    "List all archived cards for a board",
+    { boardPublicId: z.string().describe("The board's public ID") },
+    async ({ boardPublicId }) => {
+      const data = await client.request(
+        "GET",
+        `/boards/${boardPublicId}/archived-cards`,
+      );
       return {
         content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
       };

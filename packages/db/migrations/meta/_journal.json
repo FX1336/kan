@@ -267,6 +267,13 @@
       "when": 1790363955768,
       "tag": "20260925191915_AddCardIsActive",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790367569498,
+      "tag": "20260925201929_AddCardIsArchived",
+      "breakpoints": true
     }
   ]
 }

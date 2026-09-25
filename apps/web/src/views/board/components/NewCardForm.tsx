@@ -192,6 +192,7 @@ export function NewCardForm({
               dueDate: args.dueDate ?? null,
               cardNumber: null,
               isActive: false,
+              isArchived: false,
               comments: [],
               checklists: [],
               attachments: [],

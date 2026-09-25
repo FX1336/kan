@@ -9,6 +9,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineArrowRightCircle,
 } from "react-icons/hi2";
+import { IoArchiveOutline } from "react-icons/io5";
 
 export type CardContextMenuAction =
   | "members"
@@ -17,6 +18,7 @@ export type CardContextMenuAction =
   | "dueDate"
   | "copyLink"
   | "duplicate"
+  | "archive"
   | "delete";
 
 interface CardContextMenuProps {
@@ -67,6 +69,12 @@ const MENU_ITEMS: {
     action: "duplicate",
     label: t`Duplicate card`,
     icon: <HiOutlineDocumentDuplicate className="h-4 w-4 shrink-0" />,
+    requiresEdit: true,
+  },
+  {
+    action: "archive",
+    label: t`Archive card`,
+    icon: <IoArchiveOutline className="h-4 w-4 shrink-0" />,
     requiresEdit: true,
   },
   {

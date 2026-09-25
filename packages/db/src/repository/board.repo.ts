@@ -286,6 +286,7 @@ export const getByPublicId = async (
               dueDate: true,
               cardNumber: true,
               isActive: true,
+              isArchived: true,
             },
             with: {
               labels: {
@@ -366,6 +367,7 @@ export const getByPublicId = async (
             where: and(
               cardIds.length > 0 ? inArray(cards.publicId, cardIds) : undefined,
               isNull(cards.deletedAt),
+              eq(cards.isArchived, false),
               buildDueDateWhere(filters.dueDate),
             ),
             orderBy: [asc(cards.index)],
@@ -506,6 +508,7 @@ export const getBySlug = async (
               dueDate: true,
               cardNumber: true,
               isActive: true,
+              isArchived: true,
             },
             with: {
               labels: {
@@ -565,6 +568,7 @@ export const getBySlug = async (
             where: and(
               cardIds.length > 0 ? inArray(cards.publicId, cardIds) : undefined,
               isNull(cards.deletedAt),
+              eq(cards.isArchived, false),
               buildDueDateWhere(filters.dueDate),
             ),
             orderBy: [asc(cards.index)],

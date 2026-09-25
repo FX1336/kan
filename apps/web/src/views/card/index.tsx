@@ -424,6 +424,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
                   }
                   listPublicId={card?.list.publicId}
                   cardIndex={card?.index}
+                  isArchived={card?.isArchived}
                 />
                 <Link
                   href={boardReturnUrl}
