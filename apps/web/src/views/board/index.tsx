@@ -61,6 +61,8 @@ import { formatToArray, isPlaceholderPublicId } from "~/utils/helpers";
 import { DeleteCardConfirmation } from "~/views/card/components/DeleteCardConfirmation";
 import BoardDropdown from "./components/BoardDropdown";
 import CalendarView from "./components/CalendarView";
+import type { DueDateBucketKey } from "./components/DueDateView";
+import DueDateView, { getDueDateBucketUpdate } from "./components/DueDateView";
 import { CardContextDueDateModal } from "./components/CardContextDueDateModal";
 import { CardContextDuplicateModal } from "./components/CardContextDuplicateModal";
 import { CardContextLabelsModal } from "./components/CardContextLabelsModal";
@@ -180,14 +182,18 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
   const upgradeUrl = `/upgrade/select-plan?plan=team&workspacePublicId=${workspace.publicId}&returnUrl=${encodeURIComponent(router.asPath)}`;
 
   const requestedView: BoardView =
-    router.query.view === "calendar" ? "calendar" : "board";
+    router.query.view === "calendar"
+      ? "calendar"
+      : router.query.view === "due-date"
+        ? "due-date"
+        : "board";
 
   const view: BoardView = isTemplate ? "board" : requestedView;
 
   const handleViewChange = (nextView: BoardView) => {
     const nextQuery = { ...router.query };
-    if (nextView === "calendar") {
-      nextQuery.view = "calendar";
+    if (nextView === "calendar" || nextView === "due-date") {
+      nextQuery.view = nextView;
     } else {
       delete nextQuery.view;
     }
@@ -387,6 +393,51 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     },
   });
 
+  const updateCardDueDateBucketMutation = api.card.update.useMutation({
+    onMutate: async (args) => {
+      await utils.board.byId.cancel();
+
+      const currentState = utils.board.byId.getData(queryParams);
+
+      utils.board.byId.setData(queryParams, (oldBoard) => {
+        if (!oldBoard) return oldBoard;
+
+        return {
+          ...oldBoard,
+          lists: oldBoard.lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+              card.publicId === args.cardPublicId
+                ? {
+                    ...card,
+                    ...(args.dueDate !== undefined && {
+                      dueDate: args.dueDate,
+                    }),
+                    ...(args.isActive !== undefined && {
+                      isActive: args.isActive,
+                    }),
+                  }
+                : card,
+            ),
+          })),
+        };
+      });
+
+      return { previousState: currentState };
+    },
+    onError: (_error, _args, context) => {
+      utils.board.byId.setData(queryParams, context?.previousState);
+      showPopup({
+        header: t`Unable to move card`,
+        message: t`Please try again later, or contact customer support.`,
+        icon: "error",
+      });
+    },
+    onSettled: async () => {
+      await utils.board.byId.invalidate(queryParams);
+    },
+  });
+
   useEffect(() => {
     if (isSuccess && boardData) {
       setValue("name", boardData.name || "");
@@ -417,6 +468,22 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
       return;
     }
     updateCardDueDateMutation.mutate({ cardPublicId, dueDate }, { onSettled });
+  };
+
+  const handleDueDateCardMove = (
+    cardPublicId: string,
+    bucket: DueDateBucketKey,
+    onSettled: () => void,
+  ) => {
+    if (!canEditCard || isFreeCloudPlan) {
+      onSettled();
+      return;
+    }
+    const update = getDueDateBucketUpdate(bucket, workspace.weekStartDay);
+    updateCardDueDateBucketMutation.mutate(
+      { cardPublicId, ...update },
+      { onSettled },
+    );
   };
 
   const handleCardContextMenuAction = (action: CardContextMenuAction) => {
@@ -1002,6 +1069,21 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
               upgradeUrl={upgradeUrl}
               onDateClick={openNewCardForDate}
               onCardDrop={handleCalendarCardDrop}
+            />
+          )
+        ) : view === "due-date" ? (
+          boardData && (
+            <DueDateView
+              lists={boardData.lists}
+              cardPrefix={boardData.workspace.cardPrefix}
+              weekStartsOn={workspace.weekStartDay}
+              canEditCard={!!canEditCard}
+              getCardHref={(cardPublicId) =>
+                isTemplate
+                  ? `/templates/${boardId}/cards/${cardPublicId}${cardReturnQuery}`
+                  : `/cards/${cardPublicId}${cardReturnQuery}`
+              }
+              onCardMove={handleDueDateCardMove}
             />
           )
         ) : (

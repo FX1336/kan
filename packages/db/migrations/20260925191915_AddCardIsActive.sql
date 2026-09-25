@@ -1,0 +1,1 @@
+ALTER TABLE "card" ADD COLUMN "isActive" boolean DEFAULT false NOT NULL;
