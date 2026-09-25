@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { t } from "@lingui/core/macro";
 import { useForm } from "react-hook-form";
 import {
+  HiChevronDown,
   HiEllipsisHorizontal,
   HiOutlinePlusSmall,
   HiOutlineSquaresPlus,
@@ -45,6 +47,7 @@ export default function List({
   setSelectedPublicListId,
 }: ListProps) {
   const { openModal } = useModal();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { canCreateCard, canEditList, canDeleteList } = usePermissions();
   const { data: session } = authClient.useSession();
   const isCreator = list.createdBy && session?.user.id === list.createdBy;
@@ -129,6 +132,18 @@ export default function List({
           />
         </form>
         <div className="flex items-center">
+          <button
+            className="mx-1 inline-flex h-fit items-center rounded-md p-1 px-1 text-sm font-semibold text-dark-50 hover:bg-light-400 dark:hover:bg-dark-200"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            aria-label={isCollapsed ? t`Expand list` : t`Collapse list`}
+          >
+            <HiChevronDown
+              className={`h-5 w-5 text-dark-900 transition-transform ${
+                isCollapsed ? "rotate-180" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </button>
           <Tooltip
             content={!canCreateCard ? t`You don't have permission` : undefined}
           >
@@ -184,7 +199,7 @@ export default function List({
           })()}
         </div>
       </div>
-      {children}
+      {!isCollapsed && children}
     </div>
   );
 }
