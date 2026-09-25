@@ -1,8 +1,10 @@
+import { t } from "@lingui/core/macro";
 import { format, isBefore, isSameYear, startOfDay } from "date-fns";
 import { HiOutlinePaperClip } from "react-icons/hi";
 import {
   HiBars3BottomLeft,
   HiChatBubbleLeft,
+  HiOutlineCheckCircle,
   HiOutlineClock,
 } from "react-icons/hi2";
 import { twMerge } from "tailwind-merge";
@@ -25,6 +27,7 @@ const Card = ({
   comments,
   attachments,
   dueDate,
+  onMarkDone,
 }: {
   title: string;
   ticketNumber?: string | null;
@@ -49,6 +52,7 @@ const Card = ({
   comments: { publicId: string }[];
   attachments?: { publicId: string }[];
   dueDate?: Date | null;
+  onMarkDone?: () => void;
 }) => {
   const { dateLocale } = useLocalisation();
   const showYear = dueDate ? !isSameYear(dueDate, new Date()) : false;
@@ -70,13 +74,31 @@ const Card = ({
   const hasDueDate = !!dueDate;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-md border border-light-200 bg-light-50 px-3 py-2 text-sm text-neutral-900 dark:border-dark-200 dark:bg-dark-200 dark:text-dark-1000 dark:hover:bg-dark-300">
-      {ticketNumber && (
-        <span className="mb-1 text-xs text-light-700 dark:text-dark-800">
-          {ticketNumber}
-        </span>
+    <div className="relative flex flex-col overflow-hidden rounded-md border border-light-200 bg-light-50 px-3 py-2 text-sm text-neutral-900 dark:border-dark-200 dark:bg-dark-200 dark:text-dark-1000 dark:hover:bg-dark-300">
+      {onMarkDone && (
+        <button
+          type="button"
+          aria-label={t`Mark as done`}
+          title={t`Mark as done`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onMarkDone();
+          }}
+          className="absolute right-1.5 top-1.5 z-10 text-light-700 hover:text-green-600 dark:text-dark-800 dark:hover:text-green-500"
+        >
+          <HiOutlineCheckCircle className="h-5 w-5" />
+        </button>
       )}
-      <span className="break-words">{title}</span>
+      <div className={onMarkDone ? "pr-6" : undefined}>
+        {ticketNumber && (
+          <span className="mb-1 block text-xs text-light-700 dark:text-dark-800">
+            {ticketNumber}
+          </span>
+        )}
+        <span className="break-words">{title}</span>
+      </div>
       {labels.length ||
       project ||
       members.length ||

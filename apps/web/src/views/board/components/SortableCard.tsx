@@ -14,6 +14,7 @@ interface SortableCardProps {
   cardHref: string;
   canEditCard: boolean;
   onContextMenu: (event: React.MouseEvent, cardPublicId: string) => void;
+  onMarkDone?: (cardPublicId: string) => void;
 }
 
 export default function SortableCard({
@@ -23,6 +24,7 @@ export default function SortableCard({
   cardHref,
   canEditCard,
   onContextMenu,
+  onMarkDone,
 }: SortableCardProps) {
   const isPlaceholder = card.publicId.startsWith("PLACEHOLDER");
 
@@ -69,7 +71,15 @@ export default function SortableCard({
       {...attributes}
       {...listeners}
     >
-      <CardPreview card={card} cardPrefix={cardPrefix} />
+      <CardPreview
+        card={card}
+        cardPrefix={cardPrefix}
+        onMarkDone={
+          canEditCard && !isPlaceholder && onMarkDone
+            ? () => onMarkDone(card.publicId)
+            : undefined
+        }
+      />
     </Link>
   );
 }

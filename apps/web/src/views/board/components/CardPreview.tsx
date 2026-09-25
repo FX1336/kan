@@ -4,9 +4,14 @@ import Card from "./Card";
 interface CardPreviewProps {
   card: BoardCard;
   cardPrefix: string;
+  onMarkDone?: () => void;
 }
 
-export default function CardPreview({ card, cardPrefix }: CardPreviewProps) {
+export default function CardPreview({
+  card,
+  cardPrefix,
+  onMarkDone,
+}: CardPreviewProps) {
   return (
     <Card
       title={card.title}
@@ -21,6 +26,7 @@ export default function CardPreview({ card, cardPrefix }: CardPreviewProps) {
       comments={card.comments ?? []}
       attachments={card.attachments}
       dueDate={card.dueDate ?? null}
+      onMarkDone={onMarkDone}
     />
   );
 }

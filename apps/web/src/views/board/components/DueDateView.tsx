@@ -103,6 +103,7 @@ interface DraggableDueDateCardProps {
   cardPrefix: string;
   href: string;
   disabled: boolean;
+  onMarkDone?: (cardPublicId: string) => void;
 }
 
 function DraggableDueDateCard({
@@ -110,6 +111,7 @@ function DraggableDueDateCard({
   cardPrefix,
   href,
   disabled,
+  onMarkDone,
 }: DraggableDueDateCardProps) {
   const isPlaceholder = isPlaceholderPublicId(card.publicId);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -152,6 +154,11 @@ function DraggableDueDateCard({
         comments={card.comments ?? []}
         attachments={card.attachments}
         dueDate={card.dueDate ?? null}
+        onMarkDone={
+          !disabled && !isPlaceholder && onMarkDone
+            ? () => onMarkDone(card.publicId)
+            : undefined
+        }
       />
     </Link>
   );
@@ -163,6 +170,7 @@ interface DueDateColumnProps {
   cardPrefix: string;
   getCardHref: (cardPublicId: string) => string;
   canEditCard: boolean;
+  onMarkDone?: (cardPublicId: string) => void;
 }
 
 const BUCKET_ICONS: Record<DueDateBucketKey, React.ReactNode> = {
@@ -189,6 +197,7 @@ function DueDateColumn({
   cardPrefix,
   getCardHref,
   canEditCard,
+  onMarkDone,
 }: DueDateColumnProps) {
   const bucketLabels = getBucketLabels();
   const { setNodeRef, isOver } = useDroppable({ id: bucket });
@@ -218,6 +227,7 @@ function DueDateColumn({
             cardPrefix={cardPrefix}
             href={getCardHref(card.publicId)}
             disabled={!canEditCard}
+            onMarkDone={onMarkDone}
           />
         ))}
       </div>
@@ -236,6 +246,7 @@ interface DueDateViewProps {
     bucket: DueDateBucketKey,
     onSettled: () => void,
   ) => void;
+  onMarkDone?: (cardPublicId: string) => void;
 }
 
 const DueDateView = ({
@@ -245,6 +256,7 @@ const DueDateView = ({
   canEditCard,
   getCardHref,
   onCardMove,
+  onMarkDone,
 }: DueDateViewProps) => {
   const [pendingMove, setPendingMove] = useState<{
     cardPublicId: string;
@@ -323,6 +335,7 @@ const DueDateView = ({
               cardPrefix={cardPrefix}
               getCardHref={getCardHref}
               canEditCard={canEditCard}
+              onMarkDone={onMarkDone}
             />
           ))}
         </div>

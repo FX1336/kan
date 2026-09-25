@@ -1143,6 +1143,12 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                   : `/cards/${cardPublicId}${cardReturnQuery}`
               }
               onCardMove={handleDueDateCardMove}
+              onMarkDone={(cardPublicId) =>
+                archiveCardMutation.mutate({
+                  cardPublicId,
+                  isArchived: true,
+                })
+              }
             />
           )
         ) : (
@@ -1232,6 +1238,12 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                   cardPublicId,
                                 });
                               }}
+                              onMarkDone={(cardPublicId) =>
+                                archiveCardMutation.mutate({
+                                  cardPublicId,
+                                  isArchived: true,
+                                })
+                              }
                             />
                           </List>
                         ))}
