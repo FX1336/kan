@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   bigserial,
+  boolean,
   index,
   integer,
   pgEnum,
@@ -87,6 +88,7 @@ export const cards = pgTable(
       () => projects.id,
       { onDelete: "set null" },
     ),
+    isActive: boolean("isActive").notNull().default(false),
   },
   (table) => [
     index("card_list_number_idx").on(table.listId, table.cardNumber),

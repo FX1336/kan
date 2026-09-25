@@ -205,6 +205,7 @@ export const update = async (
     title?: string;
     description?: string | null;
     dueDate?: Date | null;
+    isActive?: boolean;
   },
   args: {
     cardPublicId: string;
@@ -216,6 +217,7 @@ export const update = async (
       title: cardInput.title,
       description: cardInput.description,
       dueDate: cardInput.dueDate !== undefined ? cardInput.dueDate : undefined,
+      isActive: cardInput.isActive,
       updatedAt: new Date(),
     })
     .where(and(eq(cards.publicId, args.cardPublicId), isNull(cards.deletedAt)))
@@ -225,6 +227,7 @@ export const update = async (
       title: cards.title,
       description: cards.description,
       dueDate: cards.dueDate,
+      isActive: cards.isActive,
     });
 
   return result;
@@ -492,6 +495,7 @@ export const getWithListAndMembersByPublicId = async (
       createdBy: true,
       cardNumber: true,
       index: true,
+      isActive: true,
     },
     with: {
       labels: {
@@ -901,6 +905,7 @@ export const reorder = async (
         title: true,
         description: true,
         dueDate: true,
+        isActive: true,
       },
       where: eq(cards.id, card.id),
     });

@@ -74,6 +74,7 @@ describe("card description updates", () => {
       title: "Card",
       description: null,
       dueDate: null,
+      isActive: false,
     });
     vi.mocked(cardActivityRepo.bulkCreate).mockResolvedValue([]);
     vi.mocked(sendWebhooksForWorkspace).mockResolvedValue(undefined);

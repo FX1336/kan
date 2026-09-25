@@ -1,8 +1,12 @@
 import { t } from "@lingui/core/macro";
-import { HiCalendarDays, HiOutlineViewColumns } from "react-icons/hi2";
+import {
+  HiCalendarDays,
+  HiOutlineClock,
+  HiOutlineViewColumns,
+} from "react-icons/hi2";
 import { twMerge } from "tailwind-merge";
 
-export type BoardView = "board" | "calendar";
+export type BoardView = "board" | "calendar" | "due-date";
 
 interface ViewToggleProps {
   view: BoardView;
@@ -40,6 +44,17 @@ const ViewToggle = ({ view, onChange }: ViewToggleProps) => {
       >
         <HiCalendarDays className="h-4 w-4" />
         <span className="hidden sm:inline">{t`Calendar`}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("due-date")}
+        className={twMerge(
+          baseButtonClasses,
+          view === "due-date" ? activeClasses : inactiveClasses,
+        )}
+      >
+        <HiOutlineClock className="h-4 w-4" />
+        <span className="hidden sm:inline">{t`Due dates`}</span>
       </button>
     </div>
   );

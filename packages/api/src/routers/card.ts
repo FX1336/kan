@@ -1002,6 +1002,7 @@ export const cardRouter = createTRPCRouter({
         index: z.number().optional(),
         listPublicId: z.string().min(12).optional(),
         dueDate: z.date().nullable().optional(),
+        isActive: z.boolean().optional(),
       }),
     )
     .output(cardUpdateResponseSchema)
@@ -1075,6 +1076,7 @@ export const cardRouter = createTRPCRouter({
             description: string | null;
             publicId: string;
             dueDate: Date | null;
+            isActive: boolean;
           }
         | undefined;
 
@@ -1090,7 +1092,8 @@ export const cardRouter = createTRPCRouter({
       if (
         input.title ||
         normalizedDescription !== undefined ||
-        input.dueDate !== undefined
+        input.dueDate !== undefined ||
+        input.isActive !== undefined
       ) {
         result = await cardRepo.update(
           ctx.db,
@@ -1100,6 +1103,9 @@ export const cardRouter = createTRPCRouter({
               description: normalizedDescription,
             }),
             ...(input.dueDate !== undefined && { dueDate: input.dueDate }),
+            ...(input.isActive !== undefined && {
+              isActive: input.isActive,
+            }),
           },
           { cardPublicId: input.cardPublicId },
         );
