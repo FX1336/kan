@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   checklistResponseSchema,
   labelSchema,
+  projectSchema,
   workspaceMemberSchema,
 } from "./common";
 
@@ -51,6 +52,7 @@ export const cardDetailSchema = z.object({
   dueDate: z.date().nullable(),
   createdBy: z.string().nullable(),
   labels: z.array(labelSchema),
+  project: projectSchema.nullable(),
   attachments: z.array(
     z.object({
       publicId: z.string(),
@@ -69,6 +71,7 @@ export const cardDetailSchema = z.object({
       publicId: z.string(),
       name: z.string(),
       labels: z.array(labelSchema),
+      projects: z.array(projectSchema),
       lists: z.array(
         z.object({
           publicId: z.string(),
@@ -111,6 +114,12 @@ export const cardDetailSchema = z.object({
         })
         .nullable(),
       label: z
+        .object({
+          publicId: z.string(),
+          name: z.string(),
+        })
+        .nullable(),
+      project: z
         .object({
           publicId: z.string(),
           name: z.string(),
@@ -174,6 +183,12 @@ export const activityItemSchema = z.object({
     })
     .nullable(),
   label: z
+    .object({
+      publicId: z.string(),
+      name: z.string(),
+    })
+    .nullable(),
+  project: z
     .object({
       publicId: z.string(),
       name: z.string(),

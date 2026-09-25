@@ -95,6 +95,7 @@ export const boardRouter = createTRPCRouter({
         boardPublicId: z.string().min(12),
         members: z.array(z.string().min(12)).optional(),
         labels: z.array(z.string().min(12)).optional(),
+        projects: z.array(z.string().min(12)).optional(),
         lists: z.array(z.string().min(12)).optional(),
         dueDateFilters: z
           .array(
@@ -146,6 +147,7 @@ export const boardRouter = createTRPCRouter({
         {
           members: input.members ?? [],
           labels: input.labels ?? [],
+          projects: input.projects ?? [],
           lists: input.lists ?? [],
           dueDate: dueDateFilters,
           type: input.type,
@@ -238,6 +240,7 @@ export const boardRouter = createTRPCRouter({
           .regex(/^(?![-]+$)[a-zA-Z0-9-]+$/),
         members: z.array(z.string().min(12)).optional(),
         labels: z.array(z.string().min(12)).optional(),
+        projects: z.array(z.string().min(12)).optional(),
         lists: z.array(z.string().min(12)).optional(),
         dueDateFilters: z
           .array(
@@ -278,6 +281,7 @@ export const boardRouter = createTRPCRouter({
         {
           members: input.members ?? [],
           labels: input.labels ?? [],
+          projects: input.projects ?? [],
           lists: input.lists ?? [],
           dueDate: dueDateFilters,
         },
@@ -351,6 +355,7 @@ export const boardRouter = createTRPCRouter({
           {
             members: [],
             labels: [],
+            projects: [],
             lists: [],
             dueDate: [],
             type: sourceBoardInfo.type,

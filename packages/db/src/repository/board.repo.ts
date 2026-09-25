@@ -26,6 +26,7 @@ import {
   comments,
   labels,
   lists,
+  projects,
   userBoardFavorites,
   workspaceMembers,
 } from "@kan/db/schema";
@@ -72,6 +73,14 @@ export const getAllByWorkspaceId = async (
           name: true,
           colourCode: true,
         },
+      },
+      projects: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+        where: isNull(projects.deletedAt),
       },
     },
     where: and(
@@ -153,6 +162,7 @@ export const getByPublicId = async (
   filters: {
     members: string[];
     labels: string[];
+    projects: string[];
     lists: string[];
     dueDate: DueDateFilter[];
     type: "regular" | "template" | undefined;
@@ -160,7 +170,11 @@ export const getByPublicId = async (
 ) => {
   let cardIds: string[] = [];
 
-  if (filters.labels.length > 0 || filters.members.length > 0) {
+  if (
+    filters.labels.length > 0 ||
+    filters.members.length > 0 ||
+    filters.projects.length > 0
+  ) {
     const filteredCards = await db
       .select({
         publicId: cards.publicId,
@@ -176,6 +190,7 @@ export const getByPublicId = async (
         workspaceMembers,
         eq(cardToWorkspaceMembers.workspaceMemberId, workspaceMembers.id),
       )
+      .leftJoin(projects, eq(cards.projectId, projects.id))
       .where(
         and(
           isNull(cards.deletedAt),
@@ -185,6 +200,9 @@ export const getByPublicId = async (
               : undefined,
             filters.members.length > 0
               ? inArray(workspaceMembers.publicId, filters.members)
+              : undefined,
+            filters.projects.length > 0
+              ? inArray(projects.publicId, filters.projects)
               : undefined,
           ),
         ),
@@ -242,6 +260,14 @@ export const getByPublicId = async (
         },
         where: isNull(labels.deletedAt),
       },
+      projects: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+        where: isNull(projects.deletedAt),
+      },
       lists: {
         columns: {
           publicId: true,
@@ -270,6 +296,13 @@ export const getByPublicId = async (
                       colourCode: true,
                     },
                   },
+                },
+              },
+              project: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  colourCode: true,
                 },
               },
               members: {
@@ -389,13 +422,14 @@ export const getBySlug = async (
   filters: {
     members: string[];
     labels: string[];
+    projects: string[];
     lists: string[];
     dueDate: DueDateFilter[];
   },
 ) => {
   let cardIds: string[] = [];
 
-  if (filters.labels.length) {
+  if (filters.labels.length || filters.projects.length) {
     const filteredCards = await db
       .select({
         publicId: cards.publicId,
@@ -403,12 +437,18 @@ export const getBySlug = async (
       .from(cards)
       .leftJoin(cardsToLabels, eq(cards.id, cardsToLabels.cardId))
       .leftJoin(labels, eq(cardsToLabels.labelId, labels.id))
+      .leftJoin(projects, eq(cards.projectId, projects.id))
       .where(
         and(
           isNull(cards.deletedAt),
-          filters.labels.length > 0
-            ? inArray(labels.publicId, filters.labels)
-            : undefined,
+          or(
+            filters.labels.length > 0
+              ? inArray(labels.publicId, filters.labels)
+              : undefined,
+            filters.projects.length > 0
+              ? inArray(projects.publicId, filters.projects)
+              : undefined,
+          ),
         ),
       );
 
@@ -439,6 +479,14 @@ export const getBySlug = async (
         },
         where: isNull(labels.deletedAt),
       },
+      projects: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+        where: isNull(projects.deletedAt),
+      },
       lists: {
         columns: {
           publicId: true,
@@ -467,6 +515,13 @@ export const getBySlug = async (
                       colourCode: true,
                     },
                   },
+                },
+              },
+              project: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  colourCode: true,
                 },
               },
               attachments: {
@@ -775,6 +830,11 @@ export const createFromSnapshot = async (
     source: {
       name: string;
       labels: { publicId: string; name: string; colourCode: string | null }[];
+      projects: {
+        publicId: string;
+        name: string;
+        colourCode: string | null;
+      }[];
       lists: {
         name: string;
         index: number;
@@ -787,6 +847,11 @@ export const createFromSnapshot = async (
             name: string;
             colourCode: string | null;
           }[];
+          project: {
+            publicId: string;
+            name: string;
+            colourCode: string | null;
+          } | null;
           checklists?: {
             publicId: string;
             name: string;
@@ -857,6 +922,34 @@ export const createFromSnapshot = async (
       }
     }
 
+    // Projects
+    const srcProjects = args.source.projects;
+    const projectMap = new Map<string, number>();
+
+    if (srcProjects.length) {
+      const inserted = await tx
+        .insert(projects)
+        .values(
+          srcProjects.map((p) => ({
+            publicId: generateUID(),
+            name: p.name,
+            colourCode: p.colourCode ?? null,
+            createdBy: args.createdBy,
+            boardId: newBoard.id,
+          })),
+        )
+        .returning({ id: projects.id });
+
+      for (let i = 0; i < srcProjects.length; i++) {
+        const src = srcProjects[i];
+
+        if (!src) throw new Error("Source project not found");
+
+        const created = inserted[i];
+        if (created) projectMap.set(src.publicId, created.id);
+      }
+    }
+
     // Lists
     const listIndexToId = new Map<number, number>();
     const srcLists = [...args.source.lists].sort((a, b) => a.index - b.index);
@@ -884,6 +977,10 @@ export const createFromSnapshot = async (
       const sortedCards = [...list.cards].sort((a, b) => a.index - b.index);
 
       for (const card of sortedCards) {
+        const newProjectId = card.project
+          ? projectMap.get(card.project.publicId)
+          : undefined;
+
         const [createdCard] = await tx
           .insert(cards)
           .values({
@@ -893,10 +990,22 @@ export const createFromSnapshot = async (
             createdBy: args.createdBy,
             listId: newListId,
             index: card.index,
+            projectId: newProjectId,
           })
           .returning({ id: cards.id });
 
         if (!createdCard) throw new Error("Failed to create card");
+
+        if (newProjectId) {
+          await tx.insert(cardActivities).values({
+            publicId: generateUID(),
+            type: "card.updated.project.added",
+            cardId: createdCard.id,
+            projectId: newProjectId,
+            createdBy: args.createdBy,
+            sourceBoardId: args.sourceBoardId,
+          });
+        }
 
         // Create card.created activity
         await tx.insert(cardActivities).values({

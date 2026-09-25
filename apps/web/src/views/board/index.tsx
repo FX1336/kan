@@ -40,7 +40,9 @@ import type { DragData } from "./dnd/types";
 import type { BoardCard, BoardList } from "./types";
 import Button from "~/components/Button";
 import { DeleteLabelConfirmation } from "~/components/DeleteLabelConfirmation";
+import { DeleteProjectConfirmation } from "~/components/DeleteProjectConfirmation";
 import { LabelForm } from "~/components/LabelForm";
+import { ProjectForm } from "~/components/ProjectForm";
 import Modal from "~/components/modal";
 import { NewWorkspaceForm } from "~/components/NewWorkspaceForm";
 import { PageHead } from "~/components/PageHead";
@@ -70,6 +72,7 @@ import CardPreview from "./components/CardPreview";
 import { DeleteBoardConfirmation } from "./components/DeleteBoardConfirmation";
 import { DeleteListConfirmation } from "./components/DeleteListConfirmation";
 import Filters from "./components/Filters";
+import ProjectQuickFilters from "./components/ProjectQuickFilters";
 import List from "./components/List";
 import { MoveBoardForm } from "./components/MoveBoardForm";
 import { NewCardForm } from "./components/NewCardForm";
@@ -196,6 +199,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     boardPublicId: boardId ?? "",
     members: formatToArray(router.query.members),
     labels: formatToArray(router.query.labels),
+    projects: formatToArray(router.query.projects),
     lists: formatToArray(router.query.lists),
     ...(semanticFilters.length > 0 && {
       dueDateFilters: semanticFilters,
@@ -772,6 +776,34 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
 
         <Modal
           modalSize="sm"
+          isVisible={isOpen && modalContentType === "NEW_PROJECT"}
+        >
+          <ProjectForm boardPublicId={boardId ?? ""} refetch={refetchBoard} />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
+          isVisible={isOpen && modalContentType === "EDIT_PROJECT"}
+        >
+          <ProjectForm
+            boardPublicId={boardId ?? ""}
+            refetch={refetchBoard}
+            isEdit
+          />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
+          isVisible={isOpen && modalContentType === "DELETE_PROJECT"}
+        >
+          <DeleteProjectConfirmation
+            refetch={refetchBoard}
+            projectPublicId={entityId}
+          />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
           isVisible={isOpen && modalContentType === "UPDATE_BOARD_SLUG"}
         >
           <UpdateBoardSlugForm
@@ -888,6 +920,9 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
             </p>
           )}
           <div className="order-1 mb-4 flex items-center justify-end space-x-1.5 sm:space-x-2 md:order-2 md:mb-0">
+            {!isTemplate && boardData && boardData.projects.length > 0 && (
+              <ProjectQuickFilters projects={boardData.projects} />
+            )}
             {isTemplate && (
               <div className="inline-flex cursor-default items-center justify-center whitespace-nowrap rounded-md border-[1px] border-light-300 bg-light-50 px-3 py-2 text-sm font-semibold text-light-950 shadow-sm dark:border-dark-300 dark:bg-dark-50 dark:text-dark-950">
                 <span className="mr-2">
@@ -911,6 +946,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                     <ViewToggle view={view} onChange={handleViewChange} />
                     <Filters
                       labels={boardData.labels}
+                      projects={boardData.projects}
                       members={boardData.workspace.members.filter(
                         (member) => member.user !== null,
                       )}

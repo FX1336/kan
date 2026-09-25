@@ -18,6 +18,7 @@ import { checklists } from "./checklists";
 import { imports } from "./imports";
 import { labels } from "./labels";
 import { lists } from "./lists";
+import { projects } from "./projects";
 import { users } from "./users";
 import { workspaceMembers } from "./workspaces";
 
@@ -29,6 +30,8 @@ export const activityTypes = [
   "card.updated.list",
   "card.updated.label.added",
   "card.updated.label.removed",
+  "card.updated.project.added",
+  "card.updated.project.removed",
   "card.updated.member.added",
   "card.updated.member.removed",
   "card.updated.comment.added",
@@ -80,6 +83,10 @@ export const cards = pgTable(
       () => imports.id,
     ),
     dueDate: timestamp("dueDate"),
+    projectId: bigint("projectId", { mode: "number" }).references(
+      () => projects.id,
+      { onDelete: "set null" },
+    ),
   },
   (table) => [
     index("card_list_number_idx").on(table.listId, table.cardNumber),
@@ -101,6 +108,11 @@ export const cardsRelations = relations(cards, ({ one, many }) => ({
     fields: [cards.deletedBy],
     references: [users.id],
     relationName: "cardsDeletedByUser",
+  }),
+  project: one(projects, {
+    fields: [cards.projectId],
+    references: [projects.id],
+    relationName: "cardsProject",
   }),
   labels: many(cardsToLabels),
   members: many(cardToWorkspaceMembers),
@@ -134,6 +146,10 @@ export const cardActivities = pgTable("card_activity", {
   labelId: bigint("labelId", { mode: "number" }).references(() => labels.id, {
     onDelete: "cascade",
   }),
+  projectId: bigint("projectId", { mode: "number" }).references(
+    () => projects.id,
+    { onDelete: "cascade" },
+  ),
   workspaceMemberId: bigint("workspaceMemberId", {
     mode: "number",
   }).references(() => workspaceMembers.id, { onDelete: "set null" }),
@@ -188,6 +204,11 @@ export const cardActivitiesRelations = relations(cardActivities, ({ one }) => ({
     fields: [cardActivities.labelId],
     references: [labels.id],
     relationName: "cardActivitiesLabel",
+  }),
+  project: one(projects, {
+    fields: [cardActivities.projectId],
+    references: [projects.id],
+    relationName: "cardActivitiesProject",
   }),
   workspaceMember: one(workspaceMembers, {
     fields: [cardActivities.workspaceMemberId],

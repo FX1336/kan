@@ -26,6 +26,8 @@ import { getBoardReturnUrl } from "~/utils/board-return-url";
 import { invalidateCard } from "~/utils/cardInvalidation";
 import { formatMemberDisplayName, getAvatarUrl } from "~/utils/helpers";
 import { DeleteLabelConfirmation } from "../../components/DeleteLabelConfirmation";
+import { DeleteProjectConfirmation } from "../../components/DeleteProjectConfirmation";
+import { ProjectForm } from "../../components/ProjectForm";
 import ActivityList from "./components/ActivityList";
 import { AttachmentThumbnails } from "./components/AttachmentThumbnails";
 import { AttachmentUpload } from "./components/AttachmentUpload";
@@ -38,6 +40,7 @@ import { DueDateSelector } from "./components/DueDateSelector";
 import LabelSelector from "./components/LabelSelector";
 import ListSelector from "./components/ListSelector";
 import MemberSelector from "./components/MemberSelector";
+import ProjectSelector from "./components/ProjectSelector";
 import { NewChecklistForm } from "./components/NewChecklistForm";
 import NewCommentForm from "./components/NewCommentForm";
 
@@ -65,8 +68,10 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
 
   const board = card?.list.board;
   const labels = board?.labels;
+  const projects = board?.projects;
   const workspaceMembers = board?.workspace.members;
   const selectedLabels = card?.labels;
+  const selectedProject = card?.project;
   const selectedMembers = card?.members;
 
   const formattedLabels =
@@ -82,6 +87,14 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
         leftIcon: <LabelIcon colourCode={label.colourCode} />,
       };
     }) ?? [];
+
+  const formattedProjects =
+    projects?.map((project) => ({
+      key: project.publicId,
+      value: project.name,
+      selected: selectedProject?.publicId === project.publicId,
+      leftIcon: <LabelIcon colourCode={project.colourCode} />,
+    })) ?? [];
 
   const formattedLists =
     board?.lists.map((list) => ({
@@ -135,6 +148,15 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
         <LabelSelector
           cardPublicId={cardId ?? ""}
           labels={formattedLabels}
+          isLoading={!card}
+          disabled={!canEdit}
+        />
+      </div>
+      <div className="mb-4 flex w-full flex-row">
+        <p className="my-2 mb-2 w-[100px] text-sm font-medium">{t`Project`}</p>
+        <ProjectSelector
+          cardPublicId={cardId ?? ""}
+          projects={formattedProjects}
           isLoading={!card}
           disabled={!canEdit}
         />
@@ -262,6 +284,21 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
     },
   });
 
+  const setProject = api.card.setProject.useMutation({
+    onError: () => {
+      showPopup({
+        header: t`Unable to set project`,
+        message: t`Please try again later, or contact customer support.`,
+        icon: "error",
+      });
+    },
+    onSettled: async () => {
+      if (cardId) {
+        await utils.card.byId.invalidate({ cardPublicId: cardId });
+      }
+    },
+  });
+
   const { register, handleSubmit, setValue, watch } = useForm<FormValues>({
     values: {
       cardId: cardId ?? "",
@@ -295,6 +332,20 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
       clearModalState("NEW_LABEL_CREATED");
     }
   }, [modalStates.NEW_LABEL_CREATED, card, cardId]);
+
+  // this selects the newly created project
+  useEffect(() => {
+    const newProjectId = modalStates.NEW_PROJECT_CREATED;
+    if (newProjectId && cardId) {
+      if (card?.project?.publicId !== newProjectId) {
+        setProject.mutate({
+          cardPublicId: cardId,
+          projectPublicId: newProjectId,
+        });
+      }
+      clearModalState("NEW_PROJECT_CREATED");
+    }
+  }, [modalStates.NEW_PROJECT_CREATED, card, cardId]);
 
   // Open the new item form after creating a new checklist
   useEffect(() => {
@@ -535,6 +586,34 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
             <DeleteLabelConfirmation
               refetch={refetchCard}
               labelPublicId={entityId}
+            />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "NEW_PROJECT"}
+          >
+            <ProjectForm boardPublicId={boardId ?? ""} refetch={refetchCard} />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "EDIT_PROJECT"}
+          >
+            <ProjectForm
+              boardPublicId={boardId ?? ""}
+              refetch={refetchCard}
+              isEdit
+            />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "DELETE_PROJECT"}
+          >
+            <DeleteProjectConfirmation
+              refetch={refetchCard}
+              projectPublicId={entityId}
             />
           </Modal>
 

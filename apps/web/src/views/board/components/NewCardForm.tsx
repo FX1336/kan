@@ -33,12 +33,14 @@ import { formatMemberDisplayName, getAvatarUrl } from "~/utils/helpers";
 type NewCardFormInput = NewCardInput & {
   isCreateAnotherEnabled: boolean;
   dueDate?: Date | null;
+  projectPublicId?: string | null;
 };
 
 interface QueryParams {
   boardPublicId: string;
   members: string[];
   labels: string[];
+  projects: string[];
   lists: string[];
 }
 
@@ -71,6 +73,7 @@ export function NewCardForm({
       description: "",
       listPublicId,
       labelPublicIds: [],
+      projectPublicId: null,
       memberPublicIds: [],
       isCreateAnotherEnabled: false,
       position: "start",
@@ -85,6 +88,7 @@ export function NewCardForm({
     });
 
   const labelPublicIds = watch("labelPublicIds") || [];
+  const projectPublicId = watch("projectPublicId") ?? null;
   const memberPublicIds = watch("memberPublicIds") || [];
   const isCreateAnotherEnabled = watch("isCreateAnotherEnabled");
   const position = watch("position");
@@ -139,6 +143,36 @@ export function NewCardForm({
     }
   }, [boardData?.labels, labelPublicIds, modalStates.NEW_LABEL_CREATED]);
 
+  // this selects the newly created project
+  useEffect(() => {
+    const newProjectId = modalStates.NEW_PROJECT_CREATED;
+    if (newProjectId !== undefined && newProjectId !== projectPublicId) {
+      setValue("projectPublicId", newProjectId);
+    }
+  }, [modalStates, projectPublicId]);
+
+  // this clears the selected project if it no longer exists
+  useEffect(() => {
+    if (boardData?.projects) {
+      const availableProjectIds = boardData.projects.map(
+        (project) => project.publicId,
+      );
+      const newProjectId = modalStates.NEW_PROJECT_CREATED;
+
+      if (newProjectId && availableProjectIds.includes(newProjectId)) {
+        clearModalState("NEW_PROJECT_CREATED");
+      }
+
+      if (
+        projectPublicId &&
+        !availableProjectIds.includes(projectPublicId) &&
+        projectPublicId !== newProjectId
+      ) {
+        setValue("projectPublicId", null);
+      }
+    }
+  }, [boardData?.projects, projectPublicId, modalStates.NEW_PROJECT_CREATED]);
+
   const createCard = api.card.create.useMutation({
     onMutate: async (args) => {
       await utils.board.byId.cancel();
@@ -163,6 +197,10 @@ export function NewCardForm({
               labels: oldBoard.labels.filter((label) =>
                 args.labelPublicIds.includes(label.publicId),
               ),
+              project:
+                oldBoard.projects.find(
+                  (project) => project.publicId === args.projectPublicId,
+                ) ?? null,
               members:
                 oldBoard.workspace.members
                   .filter((member) =>
@@ -213,6 +251,7 @@ export function NewCardForm({
           description: "",
           listPublicId: watch("listPublicId"),
           labelPublicIds: [],
+          projectPublicId: null,
           memberPublicIds: [],
           isCreateAnotherEnabled,
           position,
@@ -237,6 +276,14 @@ export function NewCardForm({
       value: label.name,
       leftIcon: <LabelIcon colourCode={label.colourCode} />,
       selected: labelPublicIds.includes(label.publicId),
+    })) ?? [];
+
+  const formattedProjects =
+    boardData?.projects.map((project) => ({
+      key: project.publicId,
+      value: project.name,
+      leftIcon: <LabelIcon colourCode={project.colourCode} />,
+      selected: projectPublicId === project.publicId,
     })) ?? [];
 
   const formattedLists =
@@ -312,6 +359,7 @@ export function NewCardForm({
         description: data.description,
         listPublicId: data.listPublicId,
         labelPublicIds: data.labelPublicIds,
+        projectPublicId: data.projectPublicId ?? null,
         memberPublicIds: data.memberPublicIds,
         position: data.position,
         dueDate: data.dueDate ?? null,
@@ -368,7 +416,15 @@ export function NewCardForm({
     }
   };
 
+  const handleSelectProject = (projectPublicId: string): void => {
+    setValue(
+      "projectPublicId",
+      watch("projectPublicId") === projectPublicId ? null : projectPublicId,
+    );
+  };
+
   const selectedList = formattedLists.find((item) => item.selected);
+  const selectedProject = formattedProjects.find((item) => item.selected);
 
   return (
     <form
@@ -564,6 +620,28 @@ export function NewCardForm({
                       </div>
                     )}
                   </>
+                )}
+              </div>
+            </CheckboxDropdown>
+          </div>
+          <div className="w-fit">
+            <CheckboxDropdown
+              items={formattedProjects}
+              handleSelect={(_groupKey, item) => handleSelectProject(item.key)}
+              handleEdit={(projectPublicId) =>
+                openModal("EDIT_PROJECT", projectPublicId)
+              }
+              handleCreate={() => openModal("NEW_PROJECT")}
+              createNewItemLabel={t`Create new project`}
+            >
+              <div className="flex h-full w-full items-center rounded-[5px] border-[1px] border-light-600 bg-light-200 px-2 py-1 text-left text-xs text-light-800 hover:bg-light-300 dark:border-dark-600 dark:bg-dark-400 dark:text-dark-1000 dark:hover:bg-dark-500">
+                {!selectedProject ? (
+                  t`Project`
+                ) : (
+                  <div className="flex items-center">
+                    {selectedProject.leftIcon}
+                    <div className="ml-1">{selectedProject.value}</div>
+                  </div>
                 )}
               </div>
             </CheckboxDropdown>

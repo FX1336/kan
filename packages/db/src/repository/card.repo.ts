@@ -21,6 +21,7 @@ import {
   checklists,
   labels,
   lists,
+  projects,
   workspaceMembers,
   workspaces,
 } from "@kan/db/schema";
@@ -504,6 +505,13 @@ export const getWithListAndMembersByPublicId = async (
           },
         },
       },
+      project: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+      },
       attachments: {
         columns: {
           publicId: true,
@@ -555,6 +563,14 @@ export const getWithListAndMembersByPublicId = async (
                   name: true,
                 },
                 where: isNull(labels.deletedAt),
+              },
+              projects: {
+                columns: {
+                  publicId: true,
+                  colourCode: true,
+                  name: true,
+                },
+                where: isNull(projects.deletedAt),
               },
               lists: {
                 columns: {
@@ -646,6 +662,12 @@ export const getWithListAndMembersByPublicId = async (
             },
           },
           label: {
+            columns: {
+              publicId: true,
+              name: true,
+            },
+          },
+          project: {
             columns: {
               publicId: true,
               name: true,
@@ -1000,6 +1022,38 @@ export const hardDeleteAllCardLabelRelationships = async (
     .returning();
 
   return result;
+};
+
+export const getCardProject = async (db: dbClient, cardId: number) => {
+  const result = await db.query.cards.findFirst({
+    columns: { projectId: true },
+    where: eq(cards.id, cardId),
+  });
+
+  return result?.projectId ?? null;
+};
+
+export const setCardProject = async (
+  db: dbClient,
+  args: { cardId: number; projectId: number | null },
+) => {
+  const [result] = await db
+    .update(cards)
+    .set({ projectId: args.projectId })
+    .where(eq(cards.id, args.cardId))
+    .returning({ id: cards.id, projectId: cards.projectId });
+
+  return result;
+};
+
+export const clearProjectFromAllCards = async (
+  db: dbClient,
+  projectId: number,
+) => {
+  await db
+    .update(cards)
+    .set({ projectId: null })
+    .where(eq(cards.projectId, projectId));
 };
 
 export const getWorkspaceAndCardIdByCardPublicId = async (

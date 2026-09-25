@@ -7,6 +7,7 @@ import { registerChecklistTools } from "./tools/checklist.js";
 import { registerLabelTools } from "./tools/label.js";
 import { registerListTools } from "./tools/list.js";
 import { registerMemberTools } from "./tools/member.js";
+import { registerProjectTools } from "./tools/project.js";
 import { registerWorkspaceTools } from "./tools/workspace.js";
 
 export function createKanMcpServer(client: KanClient): McpServer {
@@ -21,6 +22,7 @@ export function createKanMcpServer(client: KanClient): McpServer {
   registerCardTools(server, client);
   registerChecklistTools(server, client);
   registerLabelTools(server, client);
+  registerProjectTools(server, client);
   registerMemberTools(server, client);
 
   return server;

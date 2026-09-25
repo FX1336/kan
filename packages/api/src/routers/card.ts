@@ -7,6 +7,7 @@ import * as cardCommentRepo from "@kan/db/repository/cardComment.repo";
 import * as checklistRepo from "@kan/db/repository/checklist.repo";
 import * as labelRepo from "@kan/db/repository/label.repo";
 import * as listRepo from "@kan/db/repository/list.repo";
+import * as projectRepo from "@kan/db/repository/project.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
 import {
   generateAttachmentUrl,
@@ -53,6 +54,7 @@ export const cardRouter = createTRPCRouter({
         description: z.string().max(10000),
         listPublicId: z.string().min(12),
         labelPublicIds: z.array(z.string().min(12)),
+        projectPublicId: z.string().min(12).nullable().optional(),
         memberPublicIds: z.array(z.string().min(12)),
         position: z.enum(["start", "end"]),
         dueDate: z.date().nullable().optional(),
@@ -149,6 +151,31 @@ export const cardRouter = createTRPCRouter({
         }));
 
         await cardActivityRepo.bulkCreate(ctx.db, cardActivitesInsert);
+      }
+
+      if (newCardId && input.projectPublicId) {
+        const project = await projectRepo.getByPublicId(
+          ctx.db,
+          input.projectPublicId,
+        );
+
+        if (!project)
+          throw new TRPCError({
+            message: `Project with public ID ${input.projectPublicId} not found`,
+            code: "NOT_FOUND",
+          });
+
+        await cardRepo.setCardProject(ctx.db, {
+          cardId: newCardId,
+          projectId: project.id,
+        });
+
+        await cardActivityRepo.create(ctx.db, {
+          type: "card.updated.project.added" as const,
+          cardId: newCardId,
+          projectId: project.id,
+          createdBy: userId,
+        });
       }
 
       if (newCardId && members.length) {
@@ -552,6 +579,112 @@ export const cardRouter = createTRPCRouter({
       });
 
       return { newLabel: true };
+    }),
+  setProject: protectedProcedure
+    .meta({
+      openapi: {
+        summary: "Set or clear the project on a card",
+        method: "PUT",
+        path: "/cards/{cardPublicId}/project",
+        description: "Sets a card's project, or clears it when null is passed",
+        tags: ["Cards"],
+        protect: true,
+      },
+    })
+    .input(
+      z.object({
+        cardPublicId: z.string().min(12),
+        projectPublicId: z.string().min(12).nullable(),
+      }),
+    )
+    .output(
+      z.object({
+        project: z
+          .object({
+            publicId: z.string(),
+            name: z.string(),
+            colourCode: z.string().nullable(),
+          })
+          .nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+
+      if (!userId)
+        throw new TRPCError({
+          message: `User not authenticated`,
+          code: "UNAUTHORIZED",
+        });
+
+      const card = await cardRepo.getWorkspaceAndCardIdByCardPublicId(
+        ctx.db,
+        input.cardPublicId,
+      );
+
+      if (!card)
+        throw new TRPCError({
+          message: `Card with public ID ${input.cardPublicId} not found`,
+          code: "NOT_FOUND",
+        });
+
+      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+
+      const existingProjectId = await cardRepo.getCardProject(
+        ctx.db,
+        card.id,
+      );
+
+      if (input.projectPublicId === null) {
+        if (existingProjectId === null) {
+          return { project: null };
+        }
+
+        await cardRepo.setCardProject(ctx.db, {
+          cardId: card.id,
+          projectId: null,
+        });
+
+        await cardActivityRepo.create(ctx.db, {
+          type: "card.updated.project.removed" as const,
+          cardId: card.id,
+          projectId: existingProjectId,
+          createdBy: userId,
+        });
+
+        return { project: null };
+      }
+
+      const project = await projectRepo.getByPublicId(
+        ctx.db,
+        input.projectPublicId,
+      );
+
+      if (!project)
+        throw new TRPCError({
+          message: `Project with public ID ${input.projectPublicId} not found`,
+          code: "NOT_FOUND",
+        });
+
+      await cardRepo.setCardProject(ctx.db, {
+        cardId: card.id,
+        projectId: project.id,
+      });
+
+      await cardActivityRepo.create(ctx.db, {
+        type: "card.updated.project.added" as const,
+        cardId: card.id,
+        projectId: project.id,
+        createdBy: userId,
+      });
+
+      return {
+        project: {
+          publicId: project.publicId,
+          name: project.name,
+          colourCode: project.colourCode,
+        },
+      };
     }),
   addOrRemoveMember: protectedProcedure
     .meta({
@@ -1236,6 +1369,7 @@ export const cardRouter = createTRPCRouter({
         index: z.number().int().min(0).optional(),
         title: z.string().min(1).max(2000).optional(),
         copyLabels: z.boolean(),
+        copyProject: z.boolean(),
         copyMembers: z.boolean(),
         copyChecklists: z.boolean(),
       }),
@@ -1337,6 +1471,25 @@ export const cardRouter = createTRPCRouter({
             createdBy: userId,
           }));
           await cardActivityRepo.bulkCreate(ctx.db, cardActivitesInsert);
+        }
+      }
+
+      if (input.copyProject && sourceCard.project) {
+        const project = await projectRepo.getByPublicId(
+          ctx.db,
+          sourceCard.project.publicId,
+        );
+        if (project) {
+          await cardRepo.setCardProject(ctx.db, {
+            cardId: newCard.id,
+            projectId: project.id,
+          });
+          await cardActivityRepo.create(ctx.db, {
+            type: "card.updated.project.added" as const,
+            cardId: newCard.id,
+            projectId: project.id,
+            createdBy: userId,
+          });
         }
       }
 

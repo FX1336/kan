@@ -8,6 +8,7 @@ import {
   HiOutlineArrowRight,
   HiOutlineCheckCircle,
   HiOutlineClock,
+  HiOutlineFolder,
   HiOutlinePaperClip,
   HiOutlinePencil,
   HiOutlinePlus,
@@ -64,6 +65,7 @@ const getActivityText = ({
   memberEmail,
   isSelf,
   label,
+  project,
   fromTitle,
   toDueDate,
   dateLocale,
@@ -78,6 +80,7 @@ const getActivityText = ({
   memberEmail: string | null;
   isSelf: boolean;
   label: string | null;
+  project: string | null;
   fromTitle?: string | null;
   fromDueDate?: Date | null;
   toDueDate?: Date | null;
@@ -127,6 +130,8 @@ const getActivityText = ({
     "card.updated.list": t`moved the card to another list`,
     "card.updated.label.added": t`added a label to the card`,
     "card.updated.label.removed": t`removed a label from the card`,
+    "card.updated.project.added": t`set the project on the card`,
+    "card.updated.project.removed": t`removed the project from the card`,
     "card.updated.member.added": t`added a member to the card`,
     "card.updated.member.removed": t`removed a member from the card`,
     "card.updated.checklist.added": t`added a checklist`,
@@ -199,6 +204,22 @@ const getActivityText = ({
     return (
       <Trans>
         removed label <TextHighlight>{truncate(label)}</TextHighlight>
+      </Trans>
+    );
+  }
+
+  if (type === "card.updated.project.added" && project) {
+    return (
+      <Trans>
+        set project <TextHighlight>{truncate(project)}</TextHighlight>
+      </Trans>
+    );
+  }
+
+  if (type === "card.updated.project.removed" && project) {
+    return (
+      <Trans>
+        removed project <TextHighlight>{truncate(project)}</TextHighlight>
       </Trans>
     );
   }
@@ -334,6 +355,8 @@ const ACTIVITY_ICON_MAP: Partial<Record<ActivityType, React.ReactNode | null>> =
     "card.updated.description": <HiOutlinePencil />,
     "card.updated.label.added": <HiOutlineTag />,
     "card.updated.label.removed": <HiOutlineTag />,
+    "card.updated.project.added": <HiOutlineFolder />,
+    "card.updated.project.removed": <HiOutlineFolder />,
     "card.updated.member.added": <HiOutlineUserPlus />,
     "card.updated.member.removed": <HiOutlineUserMinus />,
     "card.updated.checklist.added": <HiOutlinePlus />,
@@ -501,6 +524,7 @@ const ActivityList = ({
           memberEmail: activity.member?.user?.email ?? null,
           isSelf: activity.member?.user?.id === sessionData?.user.id,
           label: activity.label?.name ?? null,
+          project: activity.project?.name ?? null,
           fromTitle: activity.fromTitle ?? null,
           fromDueDate: activity.fromDueDate ?? null,
           toDueDate: activity.toDueDate ?? null,

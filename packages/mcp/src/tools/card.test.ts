@@ -28,6 +28,7 @@ describe("duplicate_card", () => {
       {
         listPublicId: "list-654321",
         copyLabels: true,
+        copyProject: true,
         copyMembers: true,
         copyChecklists: true,
       },
@@ -61,6 +62,7 @@ describe("duplicate_card", () => {
       {
         listPublicId: "list-111111",
         copyLabels: true,
+        copyProject: true,
         copyMembers: true,
         copyChecklists: true,
       },
