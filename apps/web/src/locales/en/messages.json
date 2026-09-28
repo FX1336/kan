@@ -13174,5 +13174,421 @@
       ]
     ],
     "translation": "YouTube URL"
+  },
+  "AEokEI": {
+    "translation": "What matters most today?",
+    "message": "What matters most today?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        438
+      ]
+    ]
+  },
+  "iOnt4f": {
+    "translation": "Morgenstart | {0}",
+    "message": "Morgenstart | {0}",
+    "placeholders": {
+      "0": [
+        "workspace.name"
+      ]
+    },
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        356
+      ]
+    ]
+  },
+  "R2z7un": {
+    "translation": "Email Anna\nCheck invoice\n...",
+    "message": "Email Anna\nCheck invoice\n...",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        416
+      ]
+    ]
+  },
+  "RK8U+F": {
+    "translation": "Just keep going while it's flowing.",
+    "message": "Just keep going while it's flowing.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        605
+      ]
+    ]
+  },
+  "fiyiQB": {
+    "translation": "Open the window for a moment.",
+    "message": "Open the window for a moment.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        74
+      ]
+    ]
+  },
+  "Jo13f7": {
+    "translation": "My head is clear",
+    "message": "My head is clear",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        430
+      ]
+    ]
+  },
+  "mO1k4g": {
+    "translation": "Good morning.",
+    "message": "Good morning.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        379
+      ]
+    ]
+  },
+  "LcWGZ3": {
+    "translation": "Already started today.",
+    "message": "Already started today.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        628
+      ]
+    ]
+  },
+  "gdyeD6": {
+    "translation": "You're in.",
+    "message": "You're in.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        602
+      ]
+    ]
+  },
+  "EJUy9j": {
+    "translation": "Stand up for a moment and have a good stretch.",
+    "message": "Stand up for a moment and have a good stretch.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        72
+      ]
+    ]
+  },
+  "qpb1T+": {
+    "translation": "Add another task",
+    "message": "Add another task",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        502
+      ]
+    ]
+  },
+  "QUjBPo": {
+    "translation": "What is the very first small step? Something you can finish in two minutes.",
+    "message": "What is the very first small step? Something you can finish in two minutes.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        523
+      ]
+    ]
+  },
+  "UXTZ44": {
+    "translation": "Park it",
+    "message": "Park it",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        430
+      ]
+    ]
+  },
+  "XVFX4B": {
+    "translation": "Roll your shoulders and shake out your arms.",
+    "message": "Roll your shoulders and shake out your arms.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        75
+      ]
+    ]
+  },
+  "Ljq8dM": {
+    "translation": "Grab a glass of water and take a few sips.",
+    "message": "Grab a glass of water and take a few sips.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        73
+      ]
+    ]
+  },
+  "J1vKgM": {
+    "translation": "One thought per line. You don't need to decide anything here - each line becomes a card so you don't lose it.",
+    "message": "One thought per line. You don't need to decide anything here - each line becomes a card so you don't lose it.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        396
+      ]
+    ]
+  },
+  "R+SloZ": {
+    "translation": "Choose where new cards should go",
+    "message": "Choose where new cards should go",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        405
+      ]
+    ]
+  },
+  "sQUrDh": {
+    "translation": "Just five minutes. After that you're allowed to stop.",
+    "message": "Just five minutes. After that you're allowed to stop.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        554
+      ]
+    ]
+  },
+  "+Jk1+u": {
+    "translation": "I'll do that",
+    "message": "I'll do that",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        543
+      ]
+    ]
+  },
+  "3l5Lm6": {
+    "translation": "e.g. open the file and read the first line",
+    "message": "e.g. open the file and read the first line",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        529
+      ]
+    ]
+  },
+  "5xpl4l": {
+    "translation": "Set it",
+    "message": "Set it",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        511
+      ]
+    ]
+  },
+  "5Fpi+a": {
+    "translation": "One task is enough. Three at most.",
+    "message": "One task is enough. Three at most.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        441
+      ]
+    ]
+  },
+  "3b6Pwp": {
+    "translation": "What's on your mind right now?",
+    "message": "What's on your mind right now?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        393
+      ]
+    ]
+  },
+  "gdC6mB": {
+    "translation": "Go through it again",
+    "message": "Go through it again",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        660
+      ]
+    ]
+  },
+  "El55id": {
+    "translation": "Five more minutes",
+    "message": "Five more minutes",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        619
+      ]
+    ]
+  },
+  "tXkhj/": {
+    "translation": "Start",
+    "message": "Start",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        591
+      ]
+    ]
+  },
+  "nwtY4N": {
+    "translation": "Something went wrong",
+    "message": "Something went wrong",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        212
+      ],
+      [
+        "src/views/morgenstart/index.tsx",
+        222
+      ]
+    ]
+  },
+  "UH2Aqb": {
+    "translation": "The one thing for today",
+    "message": "The one thing for today",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        482
+      ]
+    ]
+  },
+  "o0ET/A": {
+    "translation": "Keep working",
+    "message": "Keep working",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        609
+      ]
+    ]
+  },
+  "G9DOZ+": {
+    "translation": "Your task",
+    "message": "Your task",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        520
+      ]
+    ]
+  },
+  "f048Gj": {
+    "translation": "Morgenstart",
+    "message": "Morgenstart",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/SideNavigation.tsx",
+        248
+      ]
+    ]
+  },
+  "QusJ4f": {
+    "translation": "Your focus for today:",
+    "message": "Your focus for today:",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        631
+      ]
+    ]
+  },
+  "6x0bpq": {
+    "translation": "Walk across the room and back.",
+    "message": "Walk across the room and back.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        76
+      ]
+    ]
+  },
+  "LLAa/9": {
+    "translation": "Optional",
+    "message": "Optional",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        482
+      ]
+    ]
   }
 }

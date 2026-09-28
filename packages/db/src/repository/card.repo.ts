@@ -7,11 +7,13 @@ import {
   gt,
   inArray,
   isNull,
+  or,
   sql,
 } from "drizzle-orm";
 
 import type { dbClient } from "@kan/db/client";
 import {
+  boards,
   cardActivities,
   cardAttachments,
   cards,
@@ -732,6 +734,42 @@ export const getWithListAndMembersByPublicId = async (
   };
 
   return formattedResult;
+};
+
+export const getFocusCandidatesForMember = async (
+  db: dbClient,
+  args: { workspaceId: number; workspaceMemberId: number; dueBefore: Date },
+) => {
+  return db
+    .select({
+      publicId: cards.publicId,
+      title: cards.title,
+      cardNumber: cards.cardNumber,
+      dueDate: cards.dueDate,
+      isActive: cards.isActive,
+      listPublicId: lists.publicId,
+      listName: lists.name,
+      boardPublicId: boards.publicId,
+      boardName: boards.name,
+    })
+    .from(cardToWorkspaceMembers)
+    .innerJoin(cards, eq(cardToWorkspaceMembers.cardId, cards.id))
+    .innerJoin(lists, eq(cards.listId, lists.id))
+    .innerJoin(boards, eq(lists.boardId, boards.id))
+    .where(
+      and(
+        eq(cardToWorkspaceMembers.workspaceMemberId, args.workspaceMemberId),
+        eq(boards.workspaceId, args.workspaceId),
+        isNull(cards.deletedAt),
+        eq(cards.isArchived, false),
+        or(
+          eq(cards.isActive, true),
+          and(sql`${cards.dueDate} IS NOT NULL`, sql`${cards.dueDate} <= ${args.dueBefore}`),
+        ),
+      ),
+    )
+    .orderBy(desc(cards.isActive), asc(cards.dueDate))
+    .limit(10);
 };
 
 export const getArchivedByBoardId = async (db: dbClient, boardId: number) => {
