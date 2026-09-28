@@ -1,4 +1,8 @@
 import { useRouter } from "next/router";
+import { t } from "@lingui/core/macro";
+import { HiOutlineFolder } from "react-icons/hi2";
+
+import { NO_PROJECT_FILTER_VALUE } from "@kan/shared/constants";
 
 import Badge from "~/components/Badge";
 import LabelIcon from "~/components/LabelIcon";
@@ -54,6 +58,17 @@ const ProjectQuickFilters = ({ projects }: { projects: Project[] }) => {
           </button>
         );
       })}
+      <button
+        type="button"
+        onClick={() => handleToggle(NO_PROJECT_FILTER_VALUE)}
+        className={`rounded-[5px] transition-opacity ${
+          activeProjectId === NO_PROJECT_FILTER_VALUE
+            ? "opacity-100"
+            : "opacity-60 hover:opacity-100"
+        }`}
+      >
+        <Badge value={t`No project`} iconLeft={<HiOutlineFolder size={12} />} />
+      </button>
     </div>
   );
 };

@@ -30,6 +30,7 @@ import {
   userBoardFavorites,
   workspaceMembers,
 } from "@kan/db/schema";
+import { NO_PROJECT_FILTER_VALUE } from "@kan/shared/constants";
 import { generateUID, normalizeDescription } from "@kan/shared/utils";
 
 export const getCount = async (db: dbClient) => {
@@ -170,6 +171,11 @@ export const getByPublicId = async (
 ) => {
   let cardIds: string[] = [];
 
+  const hasNoProjectFilter = filters.projects.includes(NO_PROJECT_FILTER_VALUE);
+  const projectPublicIds = filters.projects.filter(
+    (projectPublicId) => projectPublicId !== NO_PROJECT_FILTER_VALUE,
+  );
+
   if (
     filters.labels.length > 0 ||
     filters.members.length > 0 ||
@@ -201,9 +207,10 @@ export const getByPublicId = async (
             filters.members.length > 0
               ? inArray(workspaceMembers.publicId, filters.members)
               : undefined,
-            filters.projects.length > 0
-              ? inArray(projects.publicId, filters.projects)
+            projectPublicIds.length > 0
+              ? inArray(projects.publicId, projectPublicIds)
               : undefined,
+            hasNoProjectFilter ? isNull(cards.projectId) : undefined,
           ),
         ),
       );
@@ -432,6 +439,11 @@ export const getBySlug = async (
 ) => {
   let cardIds: string[] = [];
 
+  const hasNoProjectFilter = filters.projects.includes(NO_PROJECT_FILTER_VALUE);
+  const projectPublicIds = filters.projects.filter(
+    (projectPublicId) => projectPublicId !== NO_PROJECT_FILTER_VALUE,
+  );
+
   if (filters.labels.length || filters.projects.length) {
     const filteredCards = await db
       .select({
@@ -448,9 +460,10 @@ export const getBySlug = async (
             filters.labels.length > 0
               ? inArray(labels.publicId, filters.labels)
               : undefined,
-            filters.projects.length > 0
-              ? inArray(projects.publicId, filters.projects)
+            projectPublicIds.length > 0
+              ? inArray(projects.publicId, projectPublicIds)
               : undefined,
+            hasNoProjectFilter ? isNull(cards.projectId) : undefined,
           ),
         ),
       );

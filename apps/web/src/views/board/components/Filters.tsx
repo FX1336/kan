@@ -10,6 +10,8 @@ import {
 } from "react-icons/hi2";
 import { IoFilterOutline } from "react-icons/io5";
 
+import { NO_PROJECT_FILTER_VALUE } from "@kan/shared/constants";
+
 import Avatar from "~/components/Avatar";
 import Button from "~/components/Button";
 import CheckboxDropdown from "~/components/CheckboxDropdown";
@@ -107,12 +109,20 @@ const Filters = ({
     leftIcon: <LabelIcon colourCode={label.colourCode} />,
   }));
 
-  const formattedProjects = projects.map((project) => ({
-    key: project.publicId,
-    value: project.name,
-    selected: !!router.query.projects?.includes(project.publicId),
-    leftIcon: <LabelIcon colourCode={project.colourCode} />,
-  }));
+  const formattedProjects = [
+    ...projects.map((project) => ({
+      key: project.publicId,
+      value: project.name,
+      selected: !!router.query.projects?.includes(project.publicId),
+      leftIcon: <LabelIcon colourCode={project.colourCode} />,
+    })),
+    {
+      key: NO_PROJECT_FILTER_VALUE,
+      value: t`No project`,
+      selected: !!router.query.projects?.includes(NO_PROJECT_FILTER_VALUE),
+      leftIcon: <HiOutlineFolder size={16} />,
+    },
+  ];
 
   const formattedLists = lists.map((list) => ({
     key: list.publicId,
@@ -180,7 +190,7 @@ const Filters = ({
       items: formattedLabels,
       selectedCount: filterCounts.labels,
     },
-    ...(formattedProjects.length
+    ...(projects.length
       ? [
           {
             key: "projects",
