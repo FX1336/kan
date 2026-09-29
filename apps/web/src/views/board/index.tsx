@@ -1243,11 +1243,14 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                   cardPublicId,
                                 });
                               }}
-                              onMarkDone={(cardPublicId) =>
-                                archiveCardMutation.mutate({
-                                  cardPublicId,
-                                  isArchived: true,
-                                })
+                              onMarkDone={
+                                isTemplate
+                                  ? undefined
+                                  : (cardPublicId) =>
+                                      archiveCardMutation.mutate({
+                                        cardPublicId,
+                                        isArchived: true,
+                                      })
                               }
                             />
                           </List>
@@ -1282,6 +1285,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
             onClose={() => setContextMenu(null)}
             onAction={handleCardContextMenuAction}
             canEdit={!!canEditCard}
+            canArchive={!isTemplate}
           />
         )}
         {renderModalContent()}

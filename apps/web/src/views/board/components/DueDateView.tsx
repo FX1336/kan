@@ -150,9 +150,9 @@ function DraggableDueDateCard({
         labels={card.labels}
         project={card.project}
         members={card.members}
-        checklists={card.checklists ?? []}
+        checklists={card.checklists}
         description={card.description ?? null}
-        comments={card.comments ?? []}
+        comments={card.comments}
         attachments={card.attachments}
         dueDate={card.dueDate ?? null}
         onMarkDone={
@@ -427,9 +427,9 @@ const DueDateView = ({
                 labels={activeCard.labels}
                 project={activeCard.project}
                 members={activeCard.members}
-                checklists={activeCard.checklists ?? []}
+                checklists={activeCard.checklists}
                 description={activeCard.description ?? null}
-                comments={activeCard.comments ?? []}
+                comments={activeCard.comments}
                 attachments={activeCard.attachments}
                 dueDate={activeCard.dueDate ?? null}
               />

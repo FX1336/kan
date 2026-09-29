@@ -13890,5 +13890,413 @@
         543
       ]
     ]
+  },
+  "aCl9zQ": {
+    "translation": "Add project",
+    "message": "Add project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ProjectSelector.tsx",
+        117
+      ]
+    ]
+  },
+  "E5Y3nW": {
+    "translation": "Archive card",
+    "message": "Archive card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/CardContextMenu.tsx",
+        77
+      ],
+      [
+        "src/views/card/components/Dropdown.tsx",
+        176
+      ]
+    ]
+  },
+  "gWlA7i": {
+    "translation": "Archived cards",
+    "message": "Archived cards",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        64
+      ],
+      [
+        "src/views/board/components/BoardDropdown.tsx",
+        141
+      ]
+    ]
+  },
+  "vx/87p": {
+    "translation": "archived the card",
+    "message": "archived the card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        151
+      ]
+    ]
+  },
+  "kWiPAC": {
+    "translation": "Are you sure you want to delete this project?",
+    "message": "Are you sure you want to delete this project?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/DeleteProjectConfirmation.tsx",
+        41
+      ]
+    ]
+  },
+  "iQzw74": {
+    "translation": "Card archived",
+    "message": "Card archived",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/index.tsx",
+        474
+      ],
+      [
+        "src/views/card/components/Dropdown.tsx",
+        70
+      ]
+    ]
+  },
+  "0zzh5k": {
+    "translation": "Card restored",
+    "message": "Card restored",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        45
+      ],
+      [
+        "src/views/card/components/Dropdown.tsx",
+        70
+      ]
+    ]
+  },
+  "wbv9xO": {
+    "translation": "Create new project",
+    "message": "Create new project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/NewCardForm.tsx",
+        637
+      ],
+      [
+        "src/views/card/components/ProjectSelector.tsx",
+        100
+      ]
+    ]
+  },
+  "Q7h9s/": {
+    "translation": "Create project",
+    "message": "Create project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/ProjectForm.tsx",
+        233
+      ]
+    ]
+  },
+  "Y8D/84": {
+    "translation": "Edit project",
+    "message": "Edit project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/ProjectForm.tsx",
+        116
+      ]
+    ]
+  },
+  "vgyoCH": {
+    "translation": "Error deleting project",
+    "message": "Error deleting project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/DeleteProjectConfirmation.tsx",
+        25
+      ]
+    ]
+  },
+  "3Sdni6": {
+    "translation": "Mark as done",
+    "message": "Mark as done",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/Card.tsx",
+        81
+      ],
+      [
+        "src/views/board/components/Card.tsx",
+        82
+      ]
+    ]
+  },
+  "gKi+a/": {
+    "translation": "New project",
+    "message": "New project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/ProjectForm.tsx",
+        116
+      ]
+    ]
+  },
+  "5aI7Zw": {
+    "translation": "No archived cards",
+    "message": "No archived cards",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        76
+      ]
+    ]
+  },
+  "e0NrBM": {
+    "translation": "Project",
+    "message": "Project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/NewCardForm.tsx",
+        641
+      ],
+      [
+        "src/views/card/components/ProjectSelector.tsx",
+        101
+      ],
+      [
+        "src/views/card/index.tsx",
+        156
+      ]
+    ]
+  },
+  "+0B+ue": {
+    "translation": "Projects",
+    "message": "Projects",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/Filters.tsx",
+        187
+      ]
+    ]
+  },
+  "C7plDC": {
+    "translation": "removed project <0>{0}</0>",
+    "message": "removed project <0>{0}</0>",
+    "placeholders": {
+      "0": [
+        "truncate(project)"
+      ]
+    },
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        224
+      ]
+    ]
+  },
+  "wabOdS": {
+    "translation": "removed the project from the card",
+    "message": "removed the project from the card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        135
+      ]
+    ]
+  },
+  "yKu/3Y": {
+    "translation": "Restore",
+    "message": "Restore",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        117
+      ]
+    ]
+  },
+  "alpR9f": {
+    "translation": "Restore card",
+    "message": "Restore card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/Dropdown.tsx",
+        176
+      ]
+    ]
+  },
+  "NTE3cf": {
+    "translation": "restored the card",
+    "message": "restored the card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        152
+      ]
+    ]
+  },
+  "9T+ARd": {
+    "translation": "set project <0>{0}</0>",
+    "message": "set project <0>{0}</0>",
+    "placeholders": {
+      "0": [
+        "truncate(project)"
+      ]
+    },
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        216
+      ]
+    ]
+  },
+  "slNTa5": {
+    "translation": "set the project on the card",
+    "message": "set the project on the card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ActivityList.tsx",
+        134
+      ]
+    ]
+  },
+  "0f9CiQ": {
+    "translation": "The card has been archived.",
+    "message": "The card has been archived.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/index.tsx",
+        475
+      ],
+      [
+        "src/views/card/components/Dropdown.tsx",
+        73
+      ]
+    ]
+  },
+  "yLdojS": {
+    "translation": "The card has been restored to its list.",
+    "message": "The card has been restored to its list.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        46
+      ],
+      [
+        "src/views/card/components/Dropdown.tsx",
+        74
+      ]
+    ]
+  },
+  "+xPEjx": {
+    "translation": "Unable to archive card",
+    "message": "Unable to archive card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/index.tsx",
+        467
+      ]
+    ]
+  },
+  "8tfe4t": {
+    "translation": "Unable to restore card",
+    "message": "Unable to restore card",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ArchivedCardsModal.tsx",
+        38
+      ]
+    ]
+  },
+  "05lnJ3": {
+    "translation": "Unable to set project",
+    "message": "Unable to set project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/index.tsx",
+        290
+      ]
+    ]
+  },
+  "A1vWp1": {
+    "translation": "Unable to update project",
+    "message": "Unable to update project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/card/components/ProjectSelector.tsx",
+        65
+      ]
+    ]
+  },
+  "3hYXvQ": {
+    "translation": "Update project",
+    "message": "Update project",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/components/ProjectForm.tsx",
+        233
+      ]
+    ]
   }
 }

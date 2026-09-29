@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { endOfWeek, format, isPast, isToday } from "date-fns";
+import { endOfDay, endOfWeek, format, isPast, isToday } from "date-fns";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HiOutlineClock, HiOutlineExclamationTriangle } from "react-icons/hi2";
@@ -262,8 +262,10 @@ export default function MorgenstartView() {
     [boards],
   );
 
+  const todayEnd = useMemo(() => endOfDay(new Date()), []);
+
   const { data: todaySuggestions } = api.morgenstart.getFocusSuggestions.useQuery(
-    { workspacePublicId: workspace.publicId },
+    { workspacePublicId: workspace.publicId, dueBefore: todayEnd },
     { enabled: !!workspace.publicId && step === "focus" },
   );
 
@@ -489,6 +491,23 @@ export default function MorgenstartView() {
 
   if (!dayState) return null;
 
+  const targetListSelect = (
+    <select
+      className="mb-3 w-full rounded-md border border-light-400 bg-light-50 px-3 py-2 text-sm dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
+      value={targetListPublicId ?? ""}
+      onChange={(e) => rememberTargetList(e.target.value)}
+    >
+      <option value="" disabled>
+        {t`Choose where new cards should go`}
+      </option>
+      {allLists.map((list) => (
+        <option key={list.publicId} value={list.publicId}>
+          {list.boardName} / {list.name}
+        </option>
+      ))}
+    </select>
+  );
+
   const circumference = 2 * Math.PI * 90;
   const progress = 1 - secondsLeft / timerSeconds;
 
@@ -542,22 +561,7 @@ export default function MorgenstartView() {
               <p className="mb-4 text-light-900 dark:text-dark-900">
                 {t`Which of these should actually become a task? Uncheck anything that doesn't belong here.`}
               </p>
-              {allLists.length > 1 && (
-                <select
-                  className="mb-3 w-full rounded-md border border-light-400 bg-light-50 px-3 py-2 text-sm dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
-                  value={targetListPublicId ?? ""}
-                  onChange={(e) => rememberTargetList(e.target.value)}
-                >
-                  <option value="" disabled>
-                    {t`Choose where new cards should go`}
-                  </option>
-                  {allLists.map((list) => (
-                    <option key={list.publicId} value={list.publicId}>
-                      {list.boardName} / {list.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {allLists.length > 1 && targetListSelect}
               <ul className="mb-3 divide-y divide-light-300 dark:divide-dark-300">
                 {tempNotes.map((note, i) => (
                   <li key={i} className="flex items-center gap-3 py-2.5">
@@ -646,6 +650,10 @@ export default function MorgenstartView() {
               <p className="mb-2 text-sm text-light-900 dark:text-dark-900">
                 {t`Or something else:`}
               </p>
+              {allLists.length > 1 &&
+                !targetListPublicId &&
+                customTaskTitle.trim().length > 0 &&
+                targetListSelect}
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -654,13 +662,20 @@ export default function MorgenstartView() {
                   value={customTaskTitle}
                   onChange={(e) => setCustomTaskTitle(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") void selectCustomTask();
+                    if (
+                      e.key === "Enter" &&
+                      !(allLists.length > 1 && !targetListPublicId)
+                    )
+                      void selectCustomTask();
                   }}
                 />
                 <Button
                   size="lg"
                   isLoading={createCard.isPending || updateCard.isPending}
-                  disabled={!customTaskTitle.trim()}
+                  disabled={
+                    !customTaskTitle.trim() ||
+                    (allLists.length > 1 && !targetListPublicId)
+                  }
                   onClick={() => void selectCustomTask()}
                 >
                   {t`Set it`}
