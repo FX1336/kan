@@ -13,6 +13,7 @@ import {
 import { authClient } from "@kan/auth/client";
 
 import { useClickOutside } from "~/hooks/useClickOutside";
+import { useFocusLock } from "~/providers/focus-lock";
 import { useModal } from "~/providers/modal";
 import { usePopup } from "~/providers/popup";
 import { useWorkspace, WorkspaceProvider } from "~/providers/workspace";
@@ -51,6 +52,7 @@ export default function Dashboard({
   const { openModal, closeModal, modalContentType } = useModal();
   const { availableWorkspaces, hasLoaded } = useWorkspace();
   const { showPopup } = usePopup();
+  const { isLocked } = useFocusLock();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -182,23 +184,27 @@ export default function Dashboard({
       <div className="relative flex h-screen flex-col bg-light-50 dark:bg-dark-50 md:bg-light-100 md:p-3 md:dark:bg-dark-100">
         {/* Mobile Header */}
         <div className="flex h-12 items-center justify-between border-b border-light-300 bg-light-50 px-3 dark:border-dark-300 dark:bg-dark-50 md:hidden">
-          <button
-            ref={sideNavButtonRef}
-            onClick={toggleSideNav}
-            className="rounded p-1.5 transition-all hover:bg-light-200 dark:hover:bg-dark-100"
-          >
-            {isSideNavOpen ? (
-              <TbLayoutSidebarLeftCollapse
-                size={20}
-                className="text-light-900 dark:text-dark-900"
-              />
-            ) : (
-              <TbLayoutSidebarLeftExpand
-                size={20}
-                className="text-light-900 dark:text-dark-900"
-              />
-            )}
-          </button>
+          {isLocked ? (
+            <span />
+          ) : (
+            <button
+              ref={sideNavButtonRef}
+              onClick={toggleSideNav}
+              className="rounded p-1.5 transition-all hover:bg-light-200 dark:hover:bg-dark-100"
+            >
+              {isSideNavOpen ? (
+                <TbLayoutSidebarLeftCollapse
+                  size={20}
+                  className="text-light-900 dark:text-dark-900"
+                />
+              ) : (
+                <TbLayoutSidebarLeftExpand
+                  size={20}
+                  className="text-light-900 dark:text-dark-900"
+                />
+              )}
+            </button>
+          )}
 
           {hasRightPanel && (
             <button
@@ -222,20 +228,22 @@ export default function Dashboard({
         </div>
 
         <div className="flex h-[calc(100dvh-4.5rem)] min-h-0 w-full md:h-[calc(100dvh-1.5rem)]">
-          <div
-            ref={sideNavRef}
-            className={`fixed top-12 z-40 h-[calc(100dvh-3rem)] w-[calc(100vw-1.5rem)] transform transition-transform duration-300 ease-in-out md:relative md:top-0 md:h-full md:w-auto md:translate-x-0 ${isSideNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} `}
-          >
-            <SideNavigation
-              user={{
-                displayName: user?.name ?? session?.user.name,
-                email: user?.email ?? session?.user.email ?? "",
-                image: user?.image ?? undefined,
-              }}
-              isLoading={sessionLoading || userLoading}
-              onCloseSideNav={closeSideNav}
-            />
-          </div>
+          {!isLocked && (
+            <div
+              ref={sideNavRef}
+              className={`fixed top-12 z-40 h-[calc(100dvh-3rem)] w-[calc(100vw-1.5rem)] transform transition-transform duration-300 ease-in-out md:relative md:top-0 md:h-full md:w-auto md:translate-x-0 ${isSideNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} `}
+            >
+              <SideNavigation
+                user={{
+                  displayName: user?.name ?? session?.user.name,
+                  email: user?.email ?? session?.user.email ?? "",
+                  image: user?.image ?? undefined,
+                }}
+                isLoading={sessionLoading || userLoading}
+                onCloseSideNav={closeSideNav}
+              />
+            </div>
+          )}
 
           <div className="relative h-full min-h-0 w-full overflow-hidden md:rounded-lg md:border md:border-light-300 md:bg-light-50 md:dark:border-dark-300 md:dark:bg-dark-50">
             <div className="relative flex h-full min-h-0 w-full overflow-hidden">

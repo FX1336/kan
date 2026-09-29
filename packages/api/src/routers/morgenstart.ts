@@ -22,7 +22,12 @@ export const morgenstartRouter = createTRPCRouter({
         protect: true,
       },
     })
-    .input(z.object({ workspacePublicId: z.string().min(12) }))
+    .input(
+      z.object({
+        workspacePublicId: z.string().min(12),
+        dueBefore: z.date().optional(),
+      }),
+    )
     .output(z.array(focusSuggestionSchema))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.id;
@@ -54,8 +59,8 @@ export const morgenstartRouter = createTRPCRouter({
 
       if (!member) return [];
 
-      const dueBefore = new Date();
-      dueBefore.setHours(23, 59, 59, 999);
+      const dueBefore = input.dueBefore ?? new Date();
+      if (!input.dueBefore) dueBefore.setHours(23, 59, 59, 999);
 
       const candidates = await cardRepo.getFocusCandidatesForMember(ctx.db, {
         workspaceId: workspace.id,

@@ -1149,6 +1149,11 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                   isArchived: true,
                 })
               }
+              defaultExpandedBuckets={
+                formatToArray(router.query.expand).length
+                  ? (formatToArray(router.query.expand) as DueDateBucketKey[])
+                  : undefined
+              }
             />
           )
         ) : (

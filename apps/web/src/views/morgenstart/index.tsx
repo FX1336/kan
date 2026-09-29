@@ -1,43 +1,46 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { format, isPast, isToday } from "date-fns";
+import { endOfWeek, format, isPast, isToday } from "date-fns";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  HiOutlineCheck,
-  HiOutlineClock,
-  HiOutlineExclamationTriangle,
-} from "react-icons/hi2";
+import { HiOutlineClock, HiOutlineExclamationTriangle } from "react-icons/hi2";
 
 import Button from "~/components/Button";
 import { PageHead } from "~/components/PageHead";
+import { useFocusLock } from "~/providers/focus-lock";
 import { usePopup } from "~/providers/popup";
 import { useWorkspace } from "~/providers/workspace";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
 
-type FocusSuggestion = RouterOutputs["morgenstart"]["getFocusSuggestions"][number];
+type FocusSuggestion =
+  RouterOutputs["morgenstart"]["getFocusSuggestions"][number];
 
 type Step =
   | "activate"
   | "dump"
+  | "review"
   | "focus"
   | "micro"
   | "timer"
-  | "done"
+  | "afterTimer"
+  | "nextTask"
   | "alreadyDone";
 
-interface FocusTask {
+interface ChosenTask {
   title: string;
   cardPublicId: string | null;
+  boardPublicId: string | null;
 }
 
 interface DayState {
   completed: boolean;
-  focusTasks: FocusTask[];
+  chosenTask: ChosenTask | null;
   microstepText: string;
 }
 
-const TIMER_SECONDS = 5 * 60;
+const DEFAULT_TIMER_SECONDS = 5 * 60;
+const EXTEND_OPTIONS_MIN = [15, 30, 45];
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
@@ -54,7 +57,7 @@ const loadDayState = (workspacePublicId: string): DayState => {
   } catch {
     // ignore malformed localStorage content
   }
-  return { completed: false, focusTasks: [], microstepText: "" };
+  return { completed: false, chosenTask: null, microstepText: "" };
 };
 
 const saveDayState = (workspacePublicId: string, state: DayState) => {
@@ -66,6 +69,28 @@ const saveDayState = (workspacePublicId: string, state: DayState) => {
   } catch {
     // storage may be unavailable (private browsing, quota) - safe to ignore
   }
+};
+
+const lastMicrostepFor = (workspacePublicId: string, title: string) => {
+  try {
+    const prefix = `kan_morgenstart:${workspacePublicId}:`;
+    const keys = Object.keys(localStorage)
+      .filter((key) => key.startsWith(prefix) && key !== dayStorageKey(workspacePublicId))
+      .sort()
+      .reverse();
+
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const state = JSON.parse(raw) as DayState;
+      if (state.chosenTask?.title === title && state.microstepText) {
+        return state.microstepText;
+      }
+    }
+  } catch {
+    // ignore malformed localStorage content
+  }
+  return null;
 };
 
 const getImpulses = () => [
@@ -116,8 +141,19 @@ function DueDateBadge({ dueDate }: { dueDate: Date | null }) {
   );
 }
 
-function ProgressBar({ step }: { step: number; total: number }) {
+const STEP_PROGRESS: Partial<Record<Step, number>> = {
+  dump: 1,
+  review: 2,
+  focus: 3,
+  micro: 4,
+  timer: 5,
+};
+
+function ProgressBar({ step }: { step: Step }) {
   const total = 5;
+  const current = STEP_PROGRESS[step] ?? 0;
+  if (step === "activate" || step === "alreadyDone") return null;
+
   return (
     <div className="mb-8 flex gap-1.5">
       {Array.from({ length: total }).map((_, i) => (
@@ -125,7 +161,7 @@ function ProgressBar({ step }: { step: number; total: number }) {
           key={i}
           className={
             "h-[3px] flex-1 rounded-full transition-colors " +
-            (i < step
+            (i < current
               ? "bg-light-1000 dark:bg-dark-1000"
               : "bg-light-300 dark:bg-dark-300")
           }
@@ -139,20 +175,31 @@ export default function MorgenstartView() {
   useLingui();
   const { workspace } = useWorkspace();
   const { showPopup } = usePopup();
+  const { setLocked } = useFocusLock();
+  const router = useRouter();
   const utils = api.useUtils();
 
   const [step, setStep] = useState<Step>("activate");
   const [dayState, setDayState] = useState<DayState | null>(null);
   const [dumpText, setDumpText] = useState("");
-  const [focusInputs, setFocusInputs] = useState<string[]>([""]);
-  const [selectedSuggestions, setSelectedSuggestions] = useState<
-    Record<string, FocusSuggestion>
-  >({});
+  const [tempNotes, setTempNotes] = useState<string[]>([]);
+  const [includedNotes, setIncludedNotes] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [newReviewTask, setNewReviewTask] = useState("");
+  const [reviewCreatedTasks, setReviewCreatedTasks] = useState<
+    FocusSuggestion[]
+  >([]);
+  const [selectedCandidateKey, setSelectedCandidateKey] = useState<
+    string | null
+  >(null);
+  const [customTaskTitle, setCustomTaskTitle] = useState("");
   const [microstepText, setMicrostepText] = useState("");
   const [targetListPublicId, setTargetListPublicId] = useState<string | null>(
     null,
   );
-  const [secondsLeft, setSecondsLeft] = useState(TIMER_SECONDS);
+  const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(DEFAULT_TIMER_SECONDS);
   const [timerRunning, setTimerRunning] = useState(false);
   const timerEndRef = useRef<number | null>(null);
 
@@ -178,6 +225,11 @@ export default function MorgenstartView() {
     }
   }, [workspace.publicId]);
 
+  useEffect(() => {
+    setLocked(step !== "alreadyDone");
+    return () => setLocked(false);
+  }, [step, setLocked]);
+
   const { data: boards } = api.board.all.useQuery(
     { workspacePublicId: workspace.publicId },
     { enabled: !!workspace.publicId },
@@ -188,6 +240,7 @@ export default function MorgenstartView() {
       (boards ?? []).flatMap((board) =>
         board.lists.map((list) => ({
           publicId: list.publicId,
+          boardPublicId: board.publicId,
           name: list.name,
           boardName: board.name,
         })),
@@ -201,9 +254,27 @@ export default function MorgenstartView() {
     }
   }, [allLists, targetListPublicId]);
 
-  const { data: suggestions } = api.morgenstart.getFocusSuggestions.useQuery(
+  const boardPublicIdForList = useCallback(
+    (listPublicId: string | null) =>
+      (boards ?? []).find((board) =>
+        board.lists.some((list) => list.publicId === listPublicId),
+      )?.publicId ?? null,
+    [boards],
+  );
+
+  const { data: todaySuggestions } = api.morgenstart.getFocusSuggestions.useQuery(
     { workspacePublicId: workspace.publicId },
     { enabled: !!workspace.publicId && step === "focus" },
+  );
+
+  const weekEnd = useMemo(
+    () => endOfWeek(new Date(), { weekStartsOn: workspace.weekStartDay }),
+    [workspace.weekStartDay],
+  );
+
+  const { data: weekSuggestions } = api.morgenstart.getFocusSuggestions.useQuery(
+    { workspacePublicId: workspace.publicId, dueBefore: weekEnd },
+    { enabled: !!workspace.publicId && step === "nextTask" },
   );
 
   const createCard = api.card.create.useMutation({
@@ -231,7 +302,7 @@ export default function MorgenstartView() {
       setDayState((prev) => {
         const next: DayState = {
           completed: false,
-          focusTasks: [],
+          chosenTask: null,
           microstepText: "",
           ...prev,
           ...partial,
@@ -255,15 +326,33 @@ export default function MorgenstartView() {
     }
   };
 
-  const handleDumpSubmit = async () => {
+  const handleDumpSubmit = () => {
     const thoughts = dumpText
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean);
 
-    if (thoughts.length && targetListPublicId) {
-      for (const title of thoughts) {
-        await createCard.mutateAsync({
+    if (!thoughts.length) {
+      setStep("focus");
+      return;
+    }
+
+    setTempNotes(thoughts);
+    setIncludedNotes(Object.fromEntries(thoughts.map((_, i) => [i, true])));
+    setStep("review");
+  };
+
+  const handleReviewSubmit = async () => {
+    const titles = [
+      ...tempNotes.filter((_, i) => includedNotes[i]),
+      ...(newReviewTask.trim() ? [newReviewTask.trim()] : []),
+    ];
+
+    if (titles.length && targetListPublicId) {
+      const created: FocusSuggestion[] = [];
+
+      for (const title of titles) {
+        const newCard = await createCard.mutateAsync({
           title,
           description: "",
           listPublicId: targetListPublicId,
@@ -271,58 +360,98 @@ export default function MorgenstartView() {
           memberPublicIds: [],
           position: "end",
         });
+
+        const list = allLists.find((l) => l.publicId === targetListPublicId);
+
+        created.push({
+          cardPublicId: newCard.publicId,
+          title,
+          cardNumber: null,
+          dueDate: null,
+          isActive: false,
+          listPublicId: targetListPublicId,
+          listName: list?.name ?? "",
+          boardPublicId: list?.boardPublicId ?? "",
+          boardName: list?.boardName ?? "",
+        });
       }
+
+      setReviewCreatedTasks(created);
       await utils.board.invalidate();
     }
 
+    setTempNotes([]);
+    setNewReviewTask("");
     setStep("focus");
   };
 
-  const handleFocusSubmit = async () => {
-    const titles = focusInputs.map((title) => title.trim()).filter(Boolean);
-
-    if (!titles.length) return;
-
-    const tasks: FocusTask[] = [];
-
-    for (const title of titles) {
-      const suggestion = selectedSuggestions[title];
-
-      if (suggestion) {
-        if (!suggestion.isActive) {
-          await updateCard.mutateAsync({
-            cardPublicId: suggestion.cardPublicId,
-            isActive: true,
-          });
-        }
-        tasks.push({ title, cardPublicId: suggestion.cardPublicId });
-      } else if (targetListPublicId) {
-        const newCard = await createCard.mutateAsync({
-          title,
-          description: "",
-          listPublicId: targetListPublicId,
-          labelPublicIds: [],
-          memberPublicIds: [],
-          position: "start",
-        });
-        await updateCard.mutateAsync({
-          cardPublicId: newCard.publicId,
-          isActive: true,
-        });
-        tasks.push({ title, cardPublicId: newCard.publicId });
-      } else {
-        tasks.push({ title, cardPublicId: null });
-      }
+  const focusCandidates = useMemo(() => {
+    const map = new Map<string, FocusSuggestion>();
+    for (const candidate of [
+      ...reviewCreatedTasks,
+      ...(todaySuggestions ?? []),
+    ]) {
+      map.set(candidate.cardPublicId, candidate);
     }
+    return Array.from(map.values());
+  }, [reviewCreatedTasks, todaySuggestions]);
 
+  const selectTask = async (candidate: FocusSuggestion) => {
+    if (!candidate.isActive) {
+      await updateCard.mutateAsync({
+        cardPublicId: candidate.cardPublicId,
+        isActive: true,
+      });
+    }
+    persist({
+      chosenTask: {
+        title: candidate.title,
+        cardPublicId: candidate.cardPublicId,
+        boardPublicId: candidate.boardPublicId,
+      },
+    });
     await utils.board.invalidate();
-    persist({ focusTasks: tasks });
     setStep("micro");
   };
 
-  const startTimer = () => {
-    timerEndRef.current = Date.now() + TIMER_SECONDS * 1000;
+  const selectCustomTask = async () => {
+    const title = customTaskTitle.trim();
+    if (!title) return;
+
+    if (targetListPublicId) {
+      const newCard = await createCard.mutateAsync({
+        title,
+        description: "",
+        listPublicId: targetListPublicId,
+        labelPublicIds: [],
+        memberPublicIds: [],
+        position: "start",
+      });
+      await updateCard.mutateAsync({
+        cardPublicId: newCard.publicId,
+        isActive: true,
+      });
+      persist({
+        chosenTask: {
+          title,
+          cardPublicId: newCard.publicId,
+          boardPublicId: boardPublicIdForList(targetListPublicId),
+        },
+      });
+      await utils.board.invalidate();
+    } else {
+      persist({ chosenTask: { title, cardPublicId: null, boardPublicId: null } });
+    }
+
+    setStep("micro");
+  };
+
+  const startTimer = (seconds: number) => {
+    setTimerSeconds(seconds);
+    setSecondsLeft(seconds);
+    timerEndRef.current = Date.now() + seconds * 1000;
     setTimerRunning(true);
+    setStep("timer");
   };
 
   useEffect(() => {
@@ -338,40 +467,37 @@ export default function MorgenstartView() {
       if (left <= 0) {
         setTimerRunning(false);
         playChime();
-        persist({ completed: true, microstepText });
-        setStep("done");
+        setStep("afterTimer");
       }
     }, 250);
 
     return () => clearInterval(interval);
-  }, [timerRunning, microstepText, persist]);
+  }, [timerRunning]);
+
+  const openBoard = () => {
+    const boardPublicId = dayState?.chosenTask?.boardPublicId;
+    persist({ completed: true });
+    setLocked(false);
+    if (boardPublicId) {
+      void router.push(
+        `/boards/${boardPublicId}?view=due-date&expand=today&expand=active`,
+      );
+    } else {
+      void router.push("/boards");
+    }
+  };
 
   if (!dayState) return null;
 
   const circumference = 2 * Math.PI * 90;
-  const progress = 1 - secondsLeft / TIMER_SECONDS;
+  const progress = 1 - secondsLeft / timerSeconds;
 
   return (
     <>
       <PageHead title={t`Morgenstart | ${workspace.name}`} />
       <div className="flex h-full items-center justify-center p-8">
         <div className="w-full max-w-[520px]">
-          {step !== "activate" && step !== "alreadyDone" && (
-            <ProgressBar
-              step={
-                (
-                  {
-                    dump: 1,
-                    focus: 2,
-                    micro: 3,
-                    timer: 4,
-                    done: 5,
-                  } as Partial<Record<Step, number>>
-                )[step] ?? 0
-              }
-              total={5}
-            />
-          )}
+          <ProgressBar step={step} />
 
           {step === "activate" && (
             <div>
@@ -393,7 +519,28 @@ export default function MorgenstartView() {
                 {t`What's on your mind right now?`}
               </h1>
               <p className="mb-4 text-light-900 dark:text-dark-900">
-                {t`One thought per line. You don't need to decide anything here - each line becomes a card so you don't lose it.`}
+                {t`One thought per line. You don't need to decide anything here yet - just get it out of your head.`}
+              </p>
+              <textarea
+                autoFocus
+                className="mb-3 min-h-[150px] w-full resize-y rounded-md border border-light-400 bg-light-50 p-3.5 text-[1.05rem] leading-relaxed dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
+                placeholder={t`Email Anna\nCheck invoice\n...`}
+                value={dumpText}
+                onChange={(e) => setDumpText(e.target.value)}
+              />
+              <Button size="lg" onClick={handleDumpSubmit}>
+                {dumpText.trim() ? t`Continue` : t`My head is clear`}
+              </Button>
+            </div>
+          )}
+
+          {step === "review" && (
+            <div>
+              <h1 className="mb-3 text-2xl font-semibold tracking-tight text-neutral-900 dark:text-dark-1000">
+                {t`Take another look.`}
+              </h1>
+              <p className="mb-4 text-light-900 dark:text-dark-900">
+                {t`Which of these should actually become a task? Uncheck anything that doesn't belong here.`}
               </p>
               {allLists.length > 1 && (
                 <select
@@ -411,23 +558,45 @@ export default function MorgenstartView() {
                   ))}
                 </select>
               )}
-              <textarea
-                className="mb-3 min-h-[150px] w-full resize-y rounded-md border border-light-400 bg-light-50 p-3.5 text-[1.05rem] leading-relaxed dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
-                placeholder={t`Email Anna\nCheck invoice\n...`}
-                value={dumpText}
-                onChange={(e) => setDumpText(e.target.value)}
+              <ul className="mb-3 divide-y divide-light-300 dark:divide-dark-300">
+                {tempNotes.map((note, i) => (
+                  <li key={i} className="flex items-center gap-3 py-2.5">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-light-1000 dark:accent-dark-1000"
+                      checked={!!includedNotes[i]}
+                      onChange={(e) =>
+                        setIncludedNotes((prev) => ({
+                          ...prev,
+                          [i]: e.target.checked,
+                        }))
+                      }
+                    />
+                    <span className="text-[1.05rem] text-neutral-900 dark:text-dark-1000">
+                      {note}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <input
+                type="text"
+                className="mb-3 w-full rounded-md border border-light-400 bg-light-50 px-3.5 py-3 text-[1.05rem] dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
+                placeholder={t`Add another task`}
+                value={newReviewTask}
+                onChange={(e) => setNewReviewTask(e.target.value)}
               />
               <Button
                 size="lg"
                 isLoading={createCard.isPending}
                 disabled={
-                  dumpText.trim().length > 0 &&
+                  (Object.values(includedNotes).some(Boolean) ||
+                    newReviewTask.trim().length > 0) &&
                   allLists.length > 0 &&
                   !targetListPublicId
                 }
-                onClick={handleDumpSubmit}
+                onClick={handleReviewSubmit}
               >
-                {dumpText.trim() ? t`Park it` : t`My head is clear`}
+                {t`Take on as tasks`}
               </Button>
             </div>
           )}
@@ -438,75 +607,61 @@ export default function MorgenstartView() {
                 {t`What matters most today?`}
               </h1>
               <p className="mb-4 text-light-900 dark:text-dark-900">
-                {t`One task is enough. Three at most.`}
+                {t`Pick one task to work on now.`}
               </p>
-              {!!suggestions?.length && (
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.cardPublicId}
-                      type="button"
-                      className="inline-flex items-center rounded-full border border-dashed border-light-600 px-3 py-1.5 text-sm text-neutral-900 hover:bg-light-200 dark:border-dark-600 dark:text-dark-1000 dark:hover:bg-dark-200"
-                      onClick={() => {
-                        setFocusInputs((prev) => {
-                          const emptyIndex = prev.findIndex(
-                            (v) => !v.trim(),
-                          );
-                          if (emptyIndex >= 0) {
-                            const next = [...prev];
-                            next[emptyIndex] = suggestion.title;
-                            return next;
+              {!!focusCandidates.length && (
+                <ul className="mb-4 divide-y divide-light-300 dark:divide-dark-300">
+                  {focusCandidates.map((candidate) => (
+                    <li key={candidate.cardPublicId}>
+                      <button
+                        type="button"
+                        className={
+                          "flex w-full items-center gap-3 py-2.5 text-left " +
+                          (selectedCandidateKey === candidate.cardPublicId
+                            ? "text-light-1000 dark:text-dark-1000"
+                            : "text-neutral-900 dark:text-dark-1000")
+                        }
+                        onClick={() => {
+                          setSelectedCandidateKey(candidate.cardPublicId);
+                          void selectTask(candidate);
+                        }}
+                      >
+                        <span
+                          className={
+                            "h-4 w-4 flex-shrink-0 rounded-full border-2 " +
+                            (selectedCandidateKey === candidate.cardPublicId
+                              ? "border-light-1000 bg-light-1000 dark:border-dark-1000 dark:bg-dark-1000"
+                              : "border-light-600 dark:border-dark-600")
                           }
-                          if (prev.length >= 3) return prev;
-                          return [...prev, suggestion.title];
-                        });
-                        setSelectedSuggestions((prev) => ({
-                          ...prev,
-                          [suggestion.title]: suggestion,
-                        }));
-                      }}
-                    >
-                      {suggestion.title}
-                      <DueDateBadge dueDate={suggestion.dueDate} />
-                    </button>
+                        />
+                        <span className="text-[1.05rem]">
+                          {candidate.title}
+                        </span>
+                        <DueDateBadge dueDate={candidate.dueDate} />
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-              <div className="mb-3 flex flex-col gap-2">
-                {focusInputs.map((value, i) => (
-                  <input
-                    key={i}
-                    type="text"
-                    className="w-full rounded-md border border-light-400 bg-light-50 px-3.5 py-3 text-[1.05rem] dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
-                    placeholder={
-                      i === 0 ? t`The one thing for today` : t`Optional`
-                    }
-                    value={value}
-                    onChange={(e) => {
-                      const next = [...focusInputs];
-                      next[i] = e.target.value;
-                      setFocusInputs(next);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") void handleFocusSubmit();
-                    }}
-                  />
-                ))}
-              </div>
-              {focusInputs.length < 3 && (
-                <button
-                  type="button"
-                  className="mb-2 text-sm text-light-900 underline underline-offset-2 dark:text-dark-900"
-                  onClick={() => setFocusInputs((prev) => [...prev, ""])}
-                >
-                  {t`Add another task`}
-                </button>
-              )}
-              <div className="mt-2">
+              <p className="mb-2 text-sm text-light-900 dark:text-dark-900">
+                {t`Or something else:`}
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="w-full rounded-md border border-light-400 bg-light-50 px-3.5 py-3 text-[1.05rem] dark:border-dark-400 dark:bg-dark-50 dark:text-dark-1000"
+                  placeholder={t`The one thing for today`}
+                  value={customTaskTitle}
+                  onChange={(e) => setCustomTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void selectCustomTask();
+                  }}
+                />
                 <Button
                   size="lg"
                   isLoading={createCard.isPending || updateCard.isPending}
-                  onClick={handleFocusSubmit}
+                  disabled={!customTaskTitle.trim()}
+                  onClick={() => void selectCustomTask()}
                 >
                   {t`Set it`}
                 </Button>
@@ -517,11 +672,25 @@ export default function MorgenstartView() {
           {step === "micro" && (
             <div>
               <h1 className="mb-3 text-2xl font-semibold tracking-tight text-neutral-900 dark:text-dark-1000">
-                {dayState.focusTasks[0]?.title ?? t`Your task`}
+                {dayState.chosenTask?.title ?? t`Your task`}
               </h1>
               <p className="mb-4 text-light-900 dark:text-dark-900">
                 {t`What is the very first small step? Something you can finish in two minutes.`}
               </p>
+              {(() => {
+                const last = dayState.chosenTask
+                  ? lastMicrostepFor(workspace.publicId, dayState.chosenTask.title)
+                  : null;
+                return last ? (
+                  <button
+                    type="button"
+                    className="mb-3 inline-flex items-center rounded-full border border-dashed border-light-600 px-3 py-1.5 text-sm text-neutral-900 hover:bg-light-200 dark:border-dark-600 dark:text-dark-1000 dark:hover:bg-dark-200"
+                    onClick={() => setMicrostepText(last)}
+                  >
+                    {t`Last time:`} {last}
+                  </button>
+                ) : null;
+              })()}
               <input
                 type="text"
                 autoFocus
@@ -531,14 +700,18 @@ export default function MorgenstartView() {
                 onChange={(e) => setMicrostepText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && microstepText.trim()) {
-                    setStep("timer");
+                    persist({ microstepText });
+                    startTimer(DEFAULT_TIMER_SECONDS);
                   }
                 }}
               />
               <Button
                 size="lg"
                 disabled={!microstepText.trim()}
-                onClick={() => setStep("timer")}
+                onClick={() => {
+                  persist({ microstepText });
+                  startTimer(DEFAULT_TIMER_SECONDS);
+                }}
               >
                 {t`I'll do that`}
               </Button>
@@ -551,7 +724,7 @@ export default function MorgenstartView() {
                 {microstepText}
               </h1>
               <p className="mb-6 text-light-900 dark:text-dark-900">
-                {t`Just five minutes. After that you're allowed to stop.`}
+                {t`Just a few minutes. After that you can decide how to continue.`}
               </p>
               <div className="mb-6 flex justify-center">
                 <div className="relative grid place-items-center">
@@ -585,40 +758,85 @@ export default function MorgenstartView() {
                   </div>
                 </div>
               </div>
-              {!timerRunning && (
-                <div className="flex justify-center">
-                  <Button size="lg" onClick={startTimer}>
-                    {t`Start`}
-                  </Button>
-                </div>
-              )}
             </div>
           )}
 
-          {step === "done" && (
+          {step === "afterTimer" && (
             <div>
-              <HiOutlineCheck className="mb-5 h-16 w-16 text-light-1000 dark:text-dark-1000" />
               <h1 className="mb-3 text-2xl font-semibold tracking-tight text-neutral-900 dark:text-dark-1000">
-                {t`You're in.`}
+                {t`Time's up.`}
               </h1>
-              <p className="mb-7 text-light-900 dark:text-dark-900">
-                {t`Just keep going while it's flowing.`}
+              <p className="mb-5 text-light-900 dark:text-dark-900">
+                {t`How much longer do you want to keep working on it?`}
+              </p>
+              <div className="mb-6 flex flex-wrap gap-2">
+                {EXTEND_OPTIONS_MIN.map((minutes) => (
+                  <Button
+                    key={minutes}
+                    variant="secondary"
+                    onClick={() => startTimer(minutes * 60)}
+                  >
+                    {minutes} {t`min`}
+                  </Button>
+                ))}
+              </div>
+              <p className="mb-3 text-sm text-light-900 dark:text-dark-900">
+                {t`Or, without setting a timer:`}
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <Button size="lg" href="/boards">
-                  {t`Keep working`}
+                <Button size="lg" onClick={() => setStep("nextTask")}>
+                  {t`Choose another task`}
                 </Button>
                 <button
                   type="button"
                   className="text-sm text-light-900 underline underline-offset-2 dark:text-dark-900"
-                  onClick={() => {
-                    setSecondsLeft(TIMER_SECONDS);
-                    setStep("timer");
-                  }}
+                  onClick={openBoard}
                 >
-                  {t`Five more minutes`}
+                  {t`Open board`}
                 </button>
               </div>
+            </div>
+          )}
+
+          {step === "nextTask" && (
+            <div>
+              <h1 className="mb-3 text-2xl font-semibold tracking-tight text-neutral-900 dark:text-dark-1000">
+                {t`What's next?`}
+              </h1>
+              <p className="mb-4 text-light-900 dark:text-dark-900">
+                {t`Tasks planned for today, or this week as a fallback.`}
+              </p>
+              {!!weekSuggestions?.length && (
+                <ul className="mb-4 divide-y divide-light-300 dark:divide-dark-300">
+                  {weekSuggestions
+                    .filter(
+                      (candidate) =>
+                        candidate.cardPublicId !==
+                        dayState.chosenTask?.cardPublicId,
+                    )
+                    .map((candidate) => (
+                      <li key={candidate.cardPublicId}>
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-3 py-2.5 text-left text-neutral-900 dark:text-dark-1000"
+                          onClick={() => void selectTask(candidate)}
+                        >
+                          <span className="text-[1.05rem]">
+                            {candidate.title}
+                          </span>
+                          <DueDateBadge dueDate={candidate.dueDate} />
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+              <button
+                type="button"
+                className="text-sm text-light-900 underline underline-offset-2 dark:text-dark-900"
+                onClick={openBoard}
+              >
+                {t`Skip - open board instead`}
+              </button>
             </div>
           )}
 
@@ -627,27 +845,11 @@ export default function MorgenstartView() {
               <h1 className="mb-3 text-2xl font-semibold tracking-tight text-neutral-900 dark:text-dark-1000">
                 {t`Already started today.`}
               </h1>
-              <p className="mb-4 text-light-900 dark:text-dark-900">
-                {t`Your focus for today:`}
-              </p>
-              <ul className="mb-7 divide-y divide-light-300 dark:divide-dark-300">
-                {dayState.focusTasks.map((task, i) => (
-                  <li key={i} className="py-2.5 text-[1.05rem]">
-                    {task.cardPublicId ? (
-                      <a
-                        href={`/cards/${task.cardPublicId}`}
-                        className="text-neutral-900 hover:underline dark:text-dark-1000"
-                      >
-                        {task.title}
-                      </a>
-                    ) : (
-                      <span className="text-neutral-900 dark:text-dark-1000">
-                        {task.title}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              {dayState.chosenTask && (
+                <p className="mb-7 text-[1.05rem] text-neutral-900 dark:text-dark-1000">
+                  {t`Your focus today:`} {dayState.chosenTask.title}
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-3">
                 <Button size="lg" href="/boards">
                   {t`Close`}

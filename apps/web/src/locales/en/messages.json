@@ -13590,5 +13590,305 @@
         482
       ]
     ]
+  },
+  "PuvGJE": {
+    "translation": "Collapse list",
+    "message": "Collapse list",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/DueDateView.tsx",
+        258
+      ],
+      [
+        "src/views/board/components/List.tsx",
+        169
+      ]
+    ]
+  },
+  "6dGIAr": {
+    "translation": "Due dates",
+    "message": "Due dates",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/ViewToggle.tsx",
+        57
+      ]
+    ]
+  },
+  "mzs5zl": {
+    "translation": "Expand list",
+    "message": "Expand list",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/DueDateView.tsx",
+        223
+      ],
+      [
+        "src/views/board/components/List.tsx",
+        123
+      ],
+      [
+        "src/views/board/components/List.tsx",
+        169
+      ]
+    ]
+  },
+  "sMqaa3": {
+    "translation": "Future",
+    "message": "Future",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/DueDateView.tsx",
+        190
+      ]
+    ]
+  },
+  "VXh9CK": {
+    "translation": "No due date",
+    "message": "No due date",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/DueDateView.tsx",
+        189
+      ]
+    ]
+  },
+  "yByRxz": {
+    "translation": "This week",
+    "message": "This week",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/board/components/DueDateView.tsx",
+        191
+      ]
+    ]
+  },
+  "GeprjK": {
+    "translation": "Last time:",
+    "message": "Last time:",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        690
+      ]
+    ]
+  },
+  "aFaVYz": {
+    "translation": "Take on as tasks",
+    "message": "Take on as tasks",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        599
+      ]
+    ]
+  },
+  "/YEKnR": {
+    "translation": "Take another look.",
+    "message": "Take another look.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        540
+      ]
+    ]
+  },
+  "gfM+wl": {
+    "translation": "What's next?",
+    "message": "What's next?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        804
+      ]
+    ]
+  },
+  "bfNgeV": {
+    "translation": "Time's up.",
+    "message": "Time's up.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        767
+      ]
+    ]
+  },
+  "vgZqXM": {
+    "translation": "Pick one task to work on now.",
+    "message": "Pick one task to work on now.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        610
+      ]
+    ]
+  },
+  "ScGvdD": {
+    "translation": "Your focus today:",
+    "message": "Your focus today:",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        850
+      ]
+    ]
+  },
+  "mbnzhp": {
+    "translation": "Or something else:",
+    "message": "Or something else:",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        647
+      ]
+    ]
+  },
+  "4jfmHs": {
+    "translation": "How much longer do you want to keep working on it?",
+    "message": "How much longer do you want to keep working on it?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        770
+      ]
+    ]
+  },
+  "V/T7eI": {
+    "translation": "Tasks planned for today, or this week as a fallback.",
+    "message": "Tasks planned for today, or this week as a fallback.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        807
+      ]
+    ]
+  },
+  "6M2L3X": {
+    "translation": "Open board",
+    "message": "Open board",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        795
+      ]
+    ]
+  },
+  "92XxRZ": {
+    "translation": "Just a few minutes. After that you can decide how to continue.",
+    "message": "Just a few minutes. After that you can decide how to continue.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        727
+      ]
+    ]
+  },
+  "Mf83WG": {
+    "translation": "One thought per line. You don't need to decide anything here yet - just get it out of your head.",
+    "message": "One thought per line. You don't need to decide anything here yet - just get it out of your head.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        522
+      ]
+    ]
+  },
+  "K06X4I": {
+    "translation": "Or, without setting a timer:",
+    "message": "Or, without setting a timer:",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        784
+      ]
+    ]
+  },
+  "nQyviu": {
+    "translation": "Choose another task",
+    "message": "Choose another task",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        788
+      ]
+    ]
+  },
+  "TetJiu": {
+    "translation": "Skip - open board instead",
+    "message": "Skip - open board instead",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        838
+      ]
+    ]
+  },
+  "lWkKSO": {
+    "translation": "min",
+    "message": "min",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        779
+      ]
+    ]
+  },
+  "74Ldm/": {
+    "translation": "Which of these should actually become a task? Uncheck anything that doesn't belong here.",
+    "message": "Which of these should actually become a task? Uncheck anything that doesn't belong here.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/views/morgenstart/index.tsx",
+        543
+      ]
+    ]
   }
 }

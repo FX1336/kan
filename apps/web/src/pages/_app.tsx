@@ -12,6 +12,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 
+import { FocusLockProvider } from "~/providers/focus-lock";
 import { FontSizeProvider } from "~/providers/font-size";
 import { KeyboardShortcutProvider } from "~/providers/keyboard-shortcuts";
 import { LinguiProviderWrapper } from "~/providers/lingui";
@@ -88,13 +89,15 @@ const MyApp: AppType = ({ Component, pageProps }: AppPropsWithLayout) => {
               <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                 <ModalProvider>
                   <PopupProvider>
-                    {posthogKey ? (
-                      <PostHogProvider client={posthog}>
-                        {getLayout(<Component {...pageProps} />)}
-                      </PostHogProvider>
-                    ) : (
-                      getLayout(<Component {...pageProps} />)
-                    )}
+                    <FocusLockProvider>
+                      {posthogKey ? (
+                        <PostHogProvider client={posthog}>
+                          {getLayout(<Component {...pageProps} />)}
+                        </PostHogProvider>
+                      ) : (
+                        getLayout(<Component {...pageProps} />)
+                      )}
+                    </FocusLockProvider>
                   </PopupProvider>
                 </ModalProvider>
               </ThemeProvider>

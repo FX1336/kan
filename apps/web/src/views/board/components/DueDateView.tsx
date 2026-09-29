@@ -21,6 +21,7 @@ import {
 } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import {
+  HiChevronDown,
   HiOutlineCalendarDays,
   HiOutlineClock,
   HiOutlineExclamationTriangle,
@@ -171,6 +172,8 @@ interface DueDateColumnProps {
   getCardHref: (cardPublicId: string) => string;
   canEditCard: boolean;
   onMarkDone?: (cardPublicId: string) => void;
+  isCollapsed: boolean;
+  onToggleCollapse: (bucket: DueDateBucketKey) => void;
 }
 
 const BUCKET_ICONS: Record<DueDateBucketKey, React.ReactNode> = {
@@ -198,9 +201,44 @@ function DueDateColumn({
   getCardHref,
   canEditCard,
   onMarkDone,
+  isCollapsed,
+  onToggleCollapse,
 }: DueDateColumnProps) {
   const bucketLabels = getBucketLabels();
   const { setNodeRef, isOver } = useDroppable({ id: bucket });
+
+  if (isCollapsed) {
+    return (
+      <div
+        ref={setNodeRef}
+        className={twMerge(
+          "mr-5 flex h-fit w-10 min-w-10 max-w-10 snap-start flex-col items-center rounded-md border border-light-400 bg-light-300 py-2 dark:border-dark-300 dark:bg-dark-100 md:snap-align-none",
+          isOver && "bg-light-400 dark:bg-dark-200",
+        )}
+      >
+        <button
+          type="button"
+          className="mb-2 inline-flex h-fit items-center rounded-md p-1 text-sm font-semibold text-dark-50 hover:bg-light-400 dark:hover:bg-dark-200"
+          onClick={() => onToggleCollapse(bucket)}
+          aria-label={t`Expand list`}
+        >
+          <HiChevronDown
+            className="h-5 w-5 rotate-180 text-dark-900"
+            aria-hidden="true"
+          />
+        </button>
+        <span className="text-dark-900">{BUCKET_ICONS[bucket]}</span>
+        <span className="my-2 flex min-h-[6rem] flex-1 items-center justify-center overflow-hidden">
+          <span className="origin-center -rotate-90 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-dark-1000">
+            {bucketLabels[bucket]}
+          </span>
+        </span>
+        <span className="text-xs text-light-800 dark:text-dark-800">
+          {cards.length}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="mr-5 h-fit min-w-[18rem] max-w-[18rem] snap-start rounded-md border border-light-400 bg-light-300 py-2 pl-2 pr-1 dark:border-dark-300 dark:bg-dark-100 md:snap-align-none">
@@ -209,9 +247,22 @@ function DueDateColumn({
           <span className="text-dark-900">{BUCKET_ICONS[bucket]}</span>
           {bucketLabels[bucket]}
         </div>
-        <span className="text-xs text-light-800 dark:text-dark-800">
-          {cards.length}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-light-800 dark:text-dark-800">
+            {cards.length}
+          </span>
+          <button
+            type="button"
+            className="inline-flex h-fit items-center rounded-md p-1 text-sm font-semibold text-dark-50 hover:bg-light-400 dark:hover:bg-dark-200"
+            onClick={() => onToggleCollapse(bucket)}
+            aria-label={t`Collapse list`}
+          >
+            <HiChevronDown
+              className="h-4 w-4 text-dark-900"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
       </div>
       <div
         ref={setNodeRef}
@@ -247,6 +298,7 @@ interface DueDateViewProps {
     onSettled: () => void,
   ) => void;
   onMarkDone?: (cardPublicId: string) => void;
+  defaultExpandedBuckets?: DueDateBucketKey[];
 }
 
 const DueDateView = ({
@@ -257,11 +309,32 @@ const DueDateView = ({
   getCardHref,
   onCardMove,
   onMarkDone,
+  defaultExpandedBuckets,
 }: DueDateViewProps) => {
   const [pendingMove, setPendingMove] = useState<{
     cardPublicId: string;
     bucket: DueDateBucketKey;
   } | null>(null);
+
+  const [collapsedBuckets, setCollapsedBuckets] = useState<
+    Set<DueDateBucketKey>
+  >(() => {
+    if (!defaultExpandedBuckets) return new Set();
+    const expanded = new Set(defaultExpandedBuckets);
+    return new Set(BUCKET_ORDER.filter((bucket) => !expanded.has(bucket)));
+  });
+
+  const toggleBucketCollapse = (bucket: DueDateBucketKey) => {
+    setCollapsedBuckets((prev) => {
+      const next = new Set(prev);
+      if (next.has(bucket)) {
+        next.delete(bucket);
+      } else {
+        next.add(bucket);
+      }
+      return next;
+    });
+  };
 
   const allCards = useMemo(
     () => lists.flatMap((list) => list.cards),
@@ -336,6 +409,8 @@ const DueDateView = ({
               getCardHref={getCardHref}
               canEditCard={canEditCard}
               onMarkDone={onMarkDone}
+              isCollapsed={collapsedBuckets.has(bucket)}
+              onToggleCollapse={toggleBucketCollapse}
             />
           ))}
         </div>
