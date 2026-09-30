@@ -161,7 +161,7 @@ export const cardRouter = createTRPCRouter({
           input.projectPublicId,
         );
 
-        if (!project)
+        if (project?.boardId !== list.boardId)
           throw new TRPCError({
             message: `Project with public ID ${input.projectPublicId} not found`,
             code: "NOT_FOUND",
@@ -662,7 +662,7 @@ export const cardRouter = createTRPCRouter({
         input.projectPublicId,
       );
 
-      if (!project)
+      if (project?.boardId !== card.boardId)
         throw new TRPCError({
           message: `Project with public ID ${input.projectPublicId} not found`,
           code: "NOT_FOUND",
@@ -1121,9 +1121,18 @@ export const cardRouter = createTRPCRouter({
       }
 
       if (input.index !== undefined || newListId !== undefined) {
+        const newIndex =
+          input.index !== undefined
+            ? await cardRepo.resolveIndexIgnoringArchived(ctx.db, {
+                listId: newListId ?? existingCard.listId,
+                movingCardId: existingCard.id,
+                visibleIndex: input.index,
+              })
+            : undefined;
+
         result = await cardRepo.reorder(ctx.db, {
           cardId: existingCard.id,
-          newIndex: input.index,
+          newIndex,
           newListId: newListId,
         });
       }
@@ -1544,7 +1553,7 @@ export const cardRouter = createTRPCRouter({
           ctx.db,
           sourceCard.project.publicId,
         );
-        if (project) {
+        if (project && project.boardId === targetList.boardId) {
           await cardRepo.setCardProject(ctx.db, {
             cardId: newCard.id,
             projectId: project.id,

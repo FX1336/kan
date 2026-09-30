@@ -27,6 +27,7 @@ interface CardContextMenuProps {
   onClose: () => void;
   onAction: (action: CardContextMenuAction) => void;
   canEdit: boolean;
+  canArchive?: boolean;
 }
 
 const MENU_ITEMS: {
@@ -91,6 +92,7 @@ export function CardContextMenu({
   onClose,
   onAction,
   canEdit,
+  canArchive = true,
 }: CardContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,11 @@ export function CardContextMenu({
     };
   }, [onClose]);
 
-  const items = MENU_ITEMS.filter((item) => !item.requiresEdit || canEdit);
+  const items = MENU_ITEMS.filter(
+    (item) =>
+      (!item.requiresEdit || canEdit) &&
+      (item.action !== "archive" || canArchive),
+  );
 
   return (
     <div
