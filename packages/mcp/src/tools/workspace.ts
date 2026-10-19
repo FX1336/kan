@@ -140,6 +140,46 @@ export function registerWorkspaceTools(
   );
 
   server.tool(
+    "export_workspace",
+    "Export a workspace's boards, lists, cards, labels and projects (but not file attachments) as a single JSON payload. Use this to back up a workspace or move it to another Kan instance with import_workspace.",
+    { workspacePublicId: z.string().describe("The workspace's public ID") },
+    async ({ workspacePublicId }) => {
+      const data = await client.request(
+        "GET",
+        `/workspaces/${workspacePublicId}/export`,
+      );
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    "import_workspace",
+    "Import a workspace export (as produced by export_workspace) into a workspace. Boards are matched by public ID: an existing board is updated in place, a new one is created.",
+    {
+      workspacePublicId: z
+        .string()
+        .describe("The public ID of the workspace to import into"),
+      data: z
+        .unknown()
+        .describe(
+          "The exact JSON payload previously returned by export_workspace",
+        ),
+    },
+    async ({ workspacePublicId, data }) => {
+      const result = await client.request(
+        "POST",
+        `/workspaces/${workspacePublicId}/import`,
+        { data },
+      );
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
     "check_workspace_slug_availability",
     "Check whether a workspace slug is available",
     { slug: z.string().describe("Slug to check") },
