@@ -9,6 +9,7 @@ import { useLingui } from "@lingui/react";
 import { useMemo, useState } from "react";
 import {
   HiArrowDownTray,
+  HiArrowUpTray,
   HiChevronDown,
   HiOutlinePlusSmall,
 } from "react-icons/hi2";
@@ -22,7 +23,9 @@ import { Tooltip } from "~/components/Tooltip";
 import { usePermissions } from "~/hooks/usePermissions";
 import { useKeyboardShortcut } from "~/providers/keyboard-shortcuts";
 import { useModal } from "~/providers/modal";
+import { usePopup } from "~/providers/popup";
 import { useWorkspace } from "~/providers/workspace";
+import { api } from "~/utils/api";
 import { BoardsList } from "./components/BoardsList";
 import { ImportBoardsForm } from "./components/ImportBoardsForm";
 import { NewBoardForm } from "./components/NewBoardForm";
@@ -37,6 +40,41 @@ export default function BoardsPage({ isTemplate }: { isTemplate?: boolean }) {
   const { workspace } = useWorkspace();
   const [activeTab, setActiveTab] = useState<"boards" | "archived">("boards");
   const { canCreateBoard } = usePermissions();
+  const { showPopup } = usePopup();
+  const utils = api.useUtils();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!workspace.publicId) return;
+    setIsExporting(true);
+    try {
+      const data = await utils.transfer.exportWorkspace.fetch({
+        workspacePublicId: workspace.publicId,
+      });
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const datestamp = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `${workspace.slug ?? "kan"}-export-${datestamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      showPopup({
+        header: t`Unable to export workspace`,
+        message: t`Please try again later, or contact customer support.`,
+        icon: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const createBoardShortcut = useMemo(
     () => ({
@@ -63,6 +101,19 @@ export default function BoardsPage({ isTemplate }: { isTemplate?: boolean }) {
             {isTemplate ? t`Templates` : t`Boards`}
           </h1>
           <div className="flex gap-2">
+            {!isTemplate && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleExport}
+                isLoading={isExporting}
+                iconLeft={
+                  <HiArrowUpTray aria-hidden="true" className="h-4 w-4" />
+                }
+              >
+                {t`Export`}
+              </Button>
+            )}
             {!isTemplate && (
               <Tooltip
                 content={

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { Listbox, Transition } from "@headlessui/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaGithub, FaTrello } from "react-icons/fa";
 import {
   HiChevronUpDown,
   HiMiniArrowTopRightOnSquare,
+  HiOutlineDocumentArrowUp,
   HiOutlineQuestionMarkCircle,
   HiXMark,
 } from "react-icons/hi2";
@@ -30,6 +31,10 @@ const integrationProviders: Record<
   github: {
     name: "GitHub",
     icon: <FaGithub />,
+  },
+  kan: {
+    name: "Kan (JSON)",
+    icon: <HiOutlineDocumentArrowUp />,
   },
 };
 
@@ -61,6 +66,7 @@ const SelectSource = ({
   const availableIntegrations = [
     ...(integrations ?? []),
     ...(githubStatus?.connected ? [{ provider: "github" }] : []),
+    { provider: "kan" },
   ];
 
   const hasIntegrations = availableIntegrations.length > 0;
@@ -500,6 +506,108 @@ const ImportTrello: React.FC = () => {
   );
 };
 
+const ImportKanJson: React.FC = () => {
+  const utils = api.useUtils();
+  const { closeModal } = useModal();
+  const { workspace } = useWorkspace();
+  const { showPopup } = usePopup();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [parsedData, setParsedData] = useState<unknown>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+
+  const refetchBoards = () => utils.board.all.refetch();
+
+  const importWorkspace = api.transfer.importWorkspace.useMutation({
+    onSuccess: async (result) => {
+      showPopup({
+        header: t`Import complete`,
+        message: t`${result.boardsCreated} board(s) created, ${result.boardsUpdated} updated.`,
+        icon: "success",
+      });
+      try {
+        await refetchBoards();
+        closeModal();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    onError: (error) => {
+      showPopup({
+        header: t`Import failed`,
+        message: error.message || t`Please check the file and try again.`,
+        icon: "error",
+      });
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setParsedData(null);
+    setParseError(null);
+    setFileName(file?.name ?? null);
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const json: unknown = JSON.parse(text);
+      setParsedData(json);
+    } catch (err) {
+      console.error(err);
+      setParseError(t`This file isn't valid JSON.`);
+    }
+  };
+
+  const handleImport = () => {
+    if (!parsedData) return;
+    importWorkspace.mutate({
+      workspacePublicId: workspace.publicId,
+      data: parsedData as never,
+    });
+  };
+
+  return (
+    <div>
+      <div className="px-5">
+        <p className="mb-3 text-xs text-light-900 dark:text-dark-900">
+          {t`Choose a JSON file previously exported from Kan. Boards already in this workspace (matched by ID) will be updated; new ones will be created.`}
+        </p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          className="hidden"
+          onChange={(e) => void handleFileChange(e)}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex w-full items-center justify-center gap-2 rounded-md border-[1px] border-dashed border-light-600 px-4 py-6 text-sm text-light-900 hover:bg-light-100 dark:border-dark-600 dark:text-dark-900 dark:hover:bg-dark-300"
+        >
+          <HiOutlineDocumentArrowUp className="h-5 w-5" />
+          {fileName ?? t`Choose a .json file`}
+        </button>
+        {parseError && (
+          <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+            {parseError}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-12 flex items-center justify-end space-x-4 border-t border-light-600 px-5 pb-5 pt-5 dark:border-dark-600">
+        <Button
+          type="button"
+          onClick={handleImport}
+          isLoading={importWorkspace.isPending}
+          disabled={!parsedData || importWorkspace.isPending}
+        >
+          {t`Import`}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export function ImportBoardsForm() {
   const { closeModal } = useModal();
   const [step, setStep] = useState(1);
@@ -540,6 +648,7 @@ export function ImportBoardsForm() {
       )}
       {step === 2 && provider === "trello" && <ImportTrello />}
       {step === 2 && provider === "github" && <ImportGithub />}
+      {step === 2 && provider === "kan" && <ImportKanJson />}
     </div>
   );
 }

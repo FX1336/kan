@@ -39,3 +39,9 @@ export { listCreateResponseSchema, listUpdateResponseSchema } from "./list";
 export { memberInviteResponseSchema } from "./member";
 
 export { attachmentConfirmResponseSchema } from "./attachment";
+
+export {
+  workspaceTransferSchema,
+  importWorkspaceResponseSchema,
+} from "./transfer";
+export type { WorkspaceTransferPayload } from "./transfer";

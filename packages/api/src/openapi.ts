@@ -12,6 +12,7 @@ export const openApiDocument = generateOpenApiDocument(appRouter, {
   tags: [
     "Auth",
     "Users",
+    "Workspaces",
     "Boards",
     "Lists",
     "Cards",
