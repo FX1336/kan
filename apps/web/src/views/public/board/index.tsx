@@ -155,7 +155,7 @@ export default function PublicBoardView() {
                 </div>
                 <Filters
                   labels={data.labels ?? []}
-                  projects={data.projects ?? []}
+                  projects={data.projects}
                   members={[]}
                   lists={data.allLists ?? []}
                   isLoading={isLoading}

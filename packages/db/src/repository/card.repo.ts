@@ -7,11 +7,14 @@ import {
   gt,
   inArray,
   isNull,
+  lte,
+  or,
   sql,
 } from "drizzle-orm";
 
 import type { dbClient } from "@kan/db/client";
 import {
+  boards,
   cardActivities,
   cardAttachments,
   cards,
@@ -734,6 +737,70 @@ export const getWithListAndMembersByPublicId = async (
   return formattedResult;
 };
 
+export const getFocusCandidatesForMember = async (
+  db: dbClient,
+  args: { workspaceId: number; workspaceMemberId: number; dueBefore: Date },
+) => {
+  return db
+    .select({
+      publicId: cards.publicId,
+      title: cards.title,
+      cardNumber: cards.cardNumber,
+      dueDate: cards.dueDate,
+      isActive: cards.isActive,
+      listPublicId: lists.publicId,
+      listName: lists.name,
+      boardPublicId: boards.publicId,
+      boardName: boards.name,
+    })
+    .from(cards)
+    .innerJoin(lists, eq(cards.listId, lists.id))
+    .innerJoin(boards, eq(lists.boardId, boards.id))
+    .where(
+      and(
+        eq(boards.workspaceId, args.workspaceId),
+        eq(boards.type, "regular"),
+        eq(boards.isArchived, false),
+        isNull(boards.deletedAt),
+        isNull(lists.deletedAt),
+        isNull(cards.deletedAt),
+        eq(cards.isArchived, false),
+        // Assigned to this member, or not assigned to anyone (solo use).
+        or(
+          sql`EXISTS (SELECT 1 FROM ${cardToWorkspaceMembers} WHERE ${cardToWorkspaceMembers.cardId} = ${cards.id} AND ${cardToWorkspaceMembers.workspaceMemberId} = ${args.workspaceMemberId})`,
+          sql`NOT EXISTS (SELECT 1 FROM ${cardToWorkspaceMembers} WHERE ${cardToWorkspaceMembers.cardId} = ${cards.id})`,
+        ),
+        or(eq(cards.isActive, true), lte(cards.dueDate, args.dueBefore)),
+      ),
+    )
+    .orderBy(desc(cards.isActive), asc(cards.dueDate))
+    .limit(10);
+};
+
+// Clients only see non-archived cards, so the index they send is a position
+// among those; translate it to a position among all cards in the list.
+export const resolveIndexIgnoringArchived = async (
+  db: dbClient,
+  args: { listId: number; movingCardId: number; visibleIndex: number },
+) => {
+  const listCards = await db.query.cards.findMany({
+    columns: { id: true, isArchived: true },
+    where: and(eq(cards.listId, args.listId), isNull(cards.deletedAt)),
+    orderBy: [asc(cards.index), asc(cards.id)],
+  });
+
+  const others = listCards.filter((card) => card.id !== args.movingCardId);
+
+  let visiblePosition = 0;
+  for (const [position, card] of others.entries()) {
+    if (card.isArchived) continue;
+    if (visiblePosition === args.visibleIndex) return position;
+    visiblePosition++;
+  }
+
+  return others.length;
+};
+
 export const getArchivedByBoardId = async (db: dbClient, boardId: number) => {
   return db
     .select({
@@ -1099,7 +1166,7 @@ export const getWorkspaceAndCardIdByCardPublicId = async (
     where: and(eq(cards.publicId, cardPublicId), isNull(cards.deletedAt)),
     with: {
       list: {
-        columns: { name: true, publicId: true },
+        columns: { name: true, publicId: true, boardId: true },
         with: {
           board: {
             columns: {
@@ -1122,6 +1189,7 @@ export const getWorkspaceAndCardIdByCardPublicId = async (
         workspaceVisibility: result.list.board.visibility,
         listPublicId: result.list.publicId,
         listName: result.list.name,
+        boardId: result.list.boardId,
         boardPublicId: result.list.board.publicId,
         boardName: result.list.board.name,
       }

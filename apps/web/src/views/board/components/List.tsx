@@ -105,6 +105,37 @@ export default function List({
     transition,
   };
 
+  if (isCollapsed) {
+    return (
+      <div
+        data-board-draggable
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className={`dark-text-dark-1000 mr-5 flex h-fit w-10 min-w-10 max-w-10 snap-start flex-col items-center rounded-md border border-light-400 bg-light-300 py-2 text-neutral-900 dark:border-dark-300 dark:bg-dark-100 md:snap-align-none ${
+          canDrag ? (isDragging ? "cursor-grabbing" : "cursor-grab") : ""
+        }`}
+      >
+        <button
+          className="mb-2 inline-flex h-fit items-center rounded-md p-1 text-sm font-semibold text-dark-50 hover:bg-light-400 dark:hover:bg-dark-200"
+          onClick={() => setIsCollapsed(false)}
+          aria-label={t`Expand list`}
+        >
+          <HiChevronDown
+            className="h-5 w-5 rotate-180 text-dark-900"
+            aria-hidden="true"
+          />
+        </button>
+        <span className="flex min-h-[8rem] flex-1 items-center justify-center overflow-hidden">
+          <span className="origin-center -rotate-90 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-dark-1000">
+            {list.name}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       data-board-draggable
@@ -134,13 +165,11 @@ export default function List({
         <div className="flex items-center">
           <button
             className="mx-1 inline-flex h-fit items-center rounded-md p-1 px-1 text-sm font-semibold text-dark-50 hover:bg-light-400 dark:hover:bg-dark-200"
-            onClick={() => setIsCollapsed((prev) => !prev)}
-            aria-label={isCollapsed ? t`Expand list` : t`Collapse list`}
+            onClick={() => setIsCollapsed(true)}
+            aria-label={t`Collapse list`}
           >
             <HiChevronDown
-              className={`h-5 w-5 text-dark-900 transition-transform ${
-                isCollapsed ? "rotate-180" : ""
-              }`}
+              className="h-5 w-5 text-dark-900 transition-transform"
               aria-hidden="true"
             />
           </button>
@@ -199,7 +228,7 @@ export default function List({
           })()}
         </div>
       </div>
-      {!isCollapsed && children}
+      {children}
     </div>
   );
 }

@@ -49,7 +49,10 @@ export const getAllByPublicIds = (
     columns: {
       id: true,
     },
-    where: inArray(projects.publicId, projectPublicIds),
+    where: and(
+      inArray(projects.publicId, projectPublicIds),
+      isNull(projects.deletedAt),
+    ),
   });
 };
 
@@ -63,8 +66,12 @@ export const getByPublicId = async (
       publicId: true,
       name: true,
       colourCode: true,
+      boardId: true,
     },
-    where: eq(projects.publicId, projectPublicId),
+    where: and(
+      eq(projects.publicId, projectPublicId),
+      isNull(projects.deletedAt),
+    ),
   });
 };
 
@@ -82,7 +89,12 @@ export const update = async (
       name: projectInput.name,
       colourCode: projectInput.colourCode,
     })
-    .where(eq(projects.publicId, projectInput.projectPublicId))
+    .where(
+      and(
+        eq(projects.publicId, projectInput.projectPublicId),
+        isNull(projects.deletedAt),
+      ),
+    )
     .returning({
       id: projects.id,
       publicId: projects.publicId,
@@ -119,7 +131,10 @@ export const getWorkspaceAndProjectIdByProjectPublicId = async (
 ) => {
   const result = await db.query.projects.findFirst({
     columns: { id: true },
-    where: eq(projects.publicId, projectPublicId),
+    where: and(
+      eq(projects.publicId, projectPublicId),
+      isNull(projects.deletedAt),
+    ),
     with: {
       board: {
         columns: { workspaceId: true },

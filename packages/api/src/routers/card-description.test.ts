@@ -53,6 +53,7 @@ describe("card description updates", () => {
       workspaceVisibility: "private",
       listPublicId: "list-12345678",
       listName: "Todo",
+      boardId: 1,
       boardPublicId: "board-1234567",
       boardName: "Board",
     });

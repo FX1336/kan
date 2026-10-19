@@ -5,7 +5,7 @@ import { t } from "@lingui/core/macro";
 import { env } from "next-runtime-env";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
-import { HiBolt } from "react-icons/hi2";
+import { HiBolt, HiOutlineSun } from "react-icons/hi2";
 import {
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
@@ -28,6 +28,7 @@ import ButtonComponent from "~/components/Button";
 import ReactiveButton from "~/components/ReactiveButton";
 import UserMenu from "~/components/UserMenu";
 import WorkspaceMenu from "~/components/WorkspaceMenu";
+import { useIsMobile } from "~/hooks/useMediaQuery";
 import { useWorkspace } from "~/providers/workspace";
 import { api } from "~/utils/api";
 
@@ -41,6 +42,55 @@ interface UserType {
   displayName?: string | null | undefined;
   email?: string | null | undefined;
   image?: string | null | undefined;
+}
+
+function StaticNavButton({
+  href,
+  current,
+  name,
+  icon,
+  isCollapsed,
+  onCloseSideNav,
+}: {
+  href: string;
+  current: boolean;
+  name: string;
+  icon: React.ReactNode;
+  isCollapsed: boolean;
+  onCloseSideNav?: () => void;
+}) {
+  const isMobile = useIsMobile();
+
+  return (
+    <Link
+      href={href}
+      onClick={() => {
+        if (onCloseSideNav && isMobile) onCloseSideNav();
+      }}
+      className={twMerge(
+        "group flex h-[34px] items-center rounded-md p-1.5 text-sm font-normal leading-6 hover:bg-light-200 hover:text-light-1000 dark:hover:bg-dark-200 dark:hover:text-dark-1000",
+        isCollapsed ? "md:justify-center" : "justify-between",
+        current
+          ? "bg-light-200 text-light-1000 dark:bg-dark-200 dark:text-dark-1000"
+          : "text-neutral-600 dark:bg-dark-100 dark:text-dark-900",
+      )}
+      title={isCollapsed ? name : undefined}
+    >
+      <div
+        className={twMerge(
+          "flex items-center",
+          isCollapsed
+            ? "justify-start gap-x-3 md:justify-center md:gap-x-0"
+            : "gap-x-3",
+        )}
+      >
+        <span className="flex h-5 w-5 items-center justify-center">
+          {icon}
+        </span>
+        <span className={twMerge(isCollapsed && "md:hidden")}>{name}</span>
+      </div>
+    </Link>
+  );
 }
 
 export default function SideNavigation({
@@ -191,6 +241,16 @@ export default function SideNavigation({
 
           <WorkspaceMenu isCollapsed={isCollapsed} />
           <ul role="list" className="space-y-1">
+            <li>
+              <StaticNavButton
+                href="/morgenstart"
+                current={pathname.includes("/morgenstart")}
+                name={t`Morgenstart`}
+                icon={<HiOutlineSun className="h-[18px] w-[18px]" />}
+                isCollapsed={isCollapsed}
+                onCloseSideNav={onCloseSideNav}
+              />
+            </li>
             {navigation.map((item) => (
               <li key={item.name}>
                 <ReactiveButton

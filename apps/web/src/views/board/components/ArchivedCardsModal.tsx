@@ -105,7 +105,7 @@ export function ArchivedCardsModal({
                   size="xs"
                   isLoading={
                     restoreCard.isPending &&
-                    restoreCard.variables?.cardPublicId === card.publicId
+                    restoreCard.variables.cardPublicId === card.publicId
                   }
                   onClick={() =>
                     restoreCard.mutate({

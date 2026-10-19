@@ -419,7 +419,7 @@ export const getWorkspaceAndListIdByListPublicId = async (
   listPublicId: string,
 ) => {
   const result = await db.query.lists.findFirst({
-    columns: { id: true, name: true, createdBy: true },
+    columns: { id: true, name: true, createdBy: true, boardId: true },
     where: and(eq(lists.publicId, listPublicId), isNull(lists.deletedAt)),
     with: {
       board: {
@@ -439,6 +439,7 @@ export const getWorkspaceAndListIdByListPublicId = async (
         name: result.name,
         createdBy: result.createdBy,
         workspaceId: result.board.workspaceId,
+        boardId: result.boardId,
         boardPublicId: result.board.publicId,
         boardName: result.board.name,
       }
